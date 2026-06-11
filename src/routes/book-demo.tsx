@@ -11,7 +11,14 @@ function BookDemoPage() {
     <AuthShell
       title="Book a demo"
       subtitle="15 minutes. We'll walk through your exact workflow."
-      footer={<>Already have access? <Link to="/login" className="text-primary hover:underline">Sign in</Link></>}
+      footer={
+        <>
+          Already have access?{" "}
+          <Link to="/login" className="text-primary hover:underline">
+            Sign in
+          </Link>
+        </>
+      }
     >
       <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
         <Field label="Your name" placeholder="Aarav Sharma" />
@@ -19,7 +26,9 @@ function BookDemoPage() {
         <Field label="Phone" type="tel" placeholder="+91 98765 43210" />
         <Field label="Company" placeholder="Acme Operations" />
         <label className="block">
-          <span className="text-xs text-muted-foreground mb-1.5 block">What would you like to see?</span>
+          <span className="text-xs text-muted-foreground mb-1.5 block">
+            What would you like to see?
+          </span>
           <textarea
             rows={3}
             placeholder="e.g. daily site reports from 40 field workers"

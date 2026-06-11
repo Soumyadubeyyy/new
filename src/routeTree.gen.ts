@@ -9,12 +9,42 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as VerifyRouteImport } from './routes/verify'
+import { Route as UnauthorizedRouteImport } from './routes/unauthorized'
+import { Route as SignupRouteImport } from './routes/signup'
 import { Route as RequestAccessRouteImport } from './routes/request-access'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as BookDemoRouteImport } from './routes/book-demo'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as SettleSettingsRouteImport } from './routes/settle/settings'
+import { Route as SettleInboxRouteImport } from './routes/settle/inbox'
+import { Route as SettleFollowupsRouteImport } from './routes/settle/followups'
+import { Route as SettleConnectorsRouteImport } from './routes/settle/connectors'
+import { Route as OnboardingWhatsappRouteImport } from './routes/onboarding/whatsapp'
+import { Route as OnboardingReviewRouteImport } from './routes/onboarding/review'
+import { Route as OnboardingRemindersRouteImport } from './routes/onboarding/reminders'
+import { Route as OnboardingPropertyRouteImport } from './routes/onboarding/property'
+import { Route as OnboardingOrganizationRouteImport } from './routes/onboarding/organization'
+import { Route as OnboardingEmployessRouteImport } from './routes/onboarding/employess'
+import { Route as OnboardingEmployeesRouteImport } from './routes/onboarding/employees'
+import { Route as OnboardingCompleteRouteImport } from './routes/onboarding/complete'
 
+const VerifyRoute = VerifyRouteImport.update({
+  id: '/verify',
+  path: '/verify',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const UnauthorizedRoute = UnauthorizedRouteImport.update({
+  id: '/unauthorized',
+  path: '/unauthorized',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SignupRoute = SignupRouteImport.update({
+  id: '/signup',
+  path: '/signup',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RequestAccessRoute = RequestAccessRouteImport.update({
   id: '/request-access',
   path: '/request-access',
@@ -40,6 +70,66 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SettleSettingsRoute = SettleSettingsRouteImport.update({
+  id: '/settle/settings',
+  path: '/settle/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettleInboxRoute = SettleInboxRouteImport.update({
+  id: '/settle/inbox',
+  path: '/settle/inbox',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettleFollowupsRoute = SettleFollowupsRouteImport.update({
+  id: '/settle/followups',
+  path: '/settle/followups',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettleConnectorsRoute = SettleConnectorsRouteImport.update({
+  id: '/settle/connectors',
+  path: '/settle/connectors',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OnboardingWhatsappRoute = OnboardingWhatsappRouteImport.update({
+  id: '/onboarding/whatsapp',
+  path: '/onboarding/whatsapp',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OnboardingReviewRoute = OnboardingReviewRouteImport.update({
+  id: '/onboarding/review',
+  path: '/onboarding/review',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OnboardingRemindersRoute = OnboardingRemindersRouteImport.update({
+  id: '/onboarding/reminders',
+  path: '/onboarding/reminders',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OnboardingPropertyRoute = OnboardingPropertyRouteImport.update({
+  id: '/onboarding/property',
+  path: '/onboarding/property',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OnboardingOrganizationRoute = OnboardingOrganizationRouteImport.update({
+  id: '/onboarding/organization',
+  path: '/onboarding/organization',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OnboardingEmployessRoute = OnboardingEmployessRouteImport.update({
+  id: '/onboarding/employess',
+  path: '/onboarding/employess',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OnboardingEmployeesRoute = OnboardingEmployeesRouteImport.update({
+  id: '/onboarding/employees',
+  path: '/onboarding/employees',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OnboardingCompleteRoute = OnboardingCompleteRouteImport.update({
+  id: '/onboarding/complete',
+  path: '/onboarding/complete',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -47,6 +137,21 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof DashboardRoute
   '/login': typeof LoginRoute
   '/request-access': typeof RequestAccessRoute
+  '/signup': typeof SignupRoute
+  '/unauthorized': typeof UnauthorizedRoute
+  '/verify': typeof VerifyRoute
+  '/onboarding/complete': typeof OnboardingCompleteRoute
+  '/onboarding/employees': typeof OnboardingEmployeesRoute
+  '/onboarding/employess': typeof OnboardingEmployessRoute
+  '/onboarding/organization': typeof OnboardingOrganizationRoute
+  '/onboarding/property': typeof OnboardingPropertyRoute
+  '/onboarding/reminders': typeof OnboardingRemindersRoute
+  '/onboarding/review': typeof OnboardingReviewRoute
+  '/onboarding/whatsapp': typeof OnboardingWhatsappRoute
+  '/settle/connectors': typeof SettleConnectorsRoute
+  '/settle/followups': typeof SettleFollowupsRoute
+  '/settle/inbox': typeof SettleInboxRoute
+  '/settle/settings': typeof SettleSettingsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -54,6 +159,21 @@ export interface FileRoutesByTo {
   '/dashboard': typeof DashboardRoute
   '/login': typeof LoginRoute
   '/request-access': typeof RequestAccessRoute
+  '/signup': typeof SignupRoute
+  '/unauthorized': typeof UnauthorizedRoute
+  '/verify': typeof VerifyRoute
+  '/onboarding/complete': typeof OnboardingCompleteRoute
+  '/onboarding/employees': typeof OnboardingEmployeesRoute
+  '/onboarding/employess': typeof OnboardingEmployessRoute
+  '/onboarding/organization': typeof OnboardingOrganizationRoute
+  '/onboarding/property': typeof OnboardingPropertyRoute
+  '/onboarding/reminders': typeof OnboardingRemindersRoute
+  '/onboarding/review': typeof OnboardingReviewRoute
+  '/onboarding/whatsapp': typeof OnboardingWhatsappRoute
+  '/settle/connectors': typeof SettleConnectorsRoute
+  '/settle/followups': typeof SettleFollowupsRoute
+  '/settle/inbox': typeof SettleInboxRoute
+  '/settle/settings': typeof SettleSettingsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -62,12 +182,67 @@ export interface FileRoutesById {
   '/dashboard': typeof DashboardRoute
   '/login': typeof LoginRoute
   '/request-access': typeof RequestAccessRoute
+  '/signup': typeof SignupRoute
+  '/unauthorized': typeof UnauthorizedRoute
+  '/verify': typeof VerifyRoute
+  '/onboarding/complete': typeof OnboardingCompleteRoute
+  '/onboarding/employees': typeof OnboardingEmployeesRoute
+  '/onboarding/employess': typeof OnboardingEmployessRoute
+  '/onboarding/organization': typeof OnboardingOrganizationRoute
+  '/onboarding/property': typeof OnboardingPropertyRoute
+  '/onboarding/reminders': typeof OnboardingRemindersRoute
+  '/onboarding/review': typeof OnboardingReviewRoute
+  '/onboarding/whatsapp': typeof OnboardingWhatsappRoute
+  '/settle/connectors': typeof SettleConnectorsRoute
+  '/settle/followups': typeof SettleFollowupsRoute
+  '/settle/inbox': typeof SettleInboxRoute
+  '/settle/settings': typeof SettleSettingsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/book-demo' | '/dashboard' | '/login' | '/request-access'
+  fullPaths:
+    | '/'
+    | '/book-demo'
+    | '/dashboard'
+    | '/login'
+    | '/request-access'
+    | '/signup'
+    | '/unauthorized'
+    | '/verify'
+    | '/onboarding/complete'
+    | '/onboarding/employees'
+    | '/onboarding/employess'
+    | '/onboarding/organization'
+    | '/onboarding/property'
+    | '/onboarding/reminders'
+    | '/onboarding/review'
+    | '/onboarding/whatsapp'
+    | '/settle/connectors'
+    | '/settle/followups'
+    | '/settle/inbox'
+    | '/settle/settings'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/book-demo' | '/dashboard' | '/login' | '/request-access'
+  to:
+    | '/'
+    | '/book-demo'
+    | '/dashboard'
+    | '/login'
+    | '/request-access'
+    | '/signup'
+    | '/unauthorized'
+    | '/verify'
+    | '/onboarding/complete'
+    | '/onboarding/employees'
+    | '/onboarding/employess'
+    | '/onboarding/organization'
+    | '/onboarding/property'
+    | '/onboarding/reminders'
+    | '/onboarding/review'
+    | '/onboarding/whatsapp'
+    | '/settle/connectors'
+    | '/settle/followups'
+    | '/settle/inbox'
+    | '/settle/settings'
   id:
     | '__root__'
     | '/'
@@ -75,6 +250,21 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/login'
     | '/request-access'
+    | '/signup'
+    | '/unauthorized'
+    | '/verify'
+    | '/onboarding/complete'
+    | '/onboarding/employees'
+    | '/onboarding/employess'
+    | '/onboarding/organization'
+    | '/onboarding/property'
+    | '/onboarding/reminders'
+    | '/onboarding/review'
+    | '/onboarding/whatsapp'
+    | '/settle/connectors'
+    | '/settle/followups'
+    | '/settle/inbox'
+    | '/settle/settings'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -83,10 +273,46 @@ export interface RootRouteChildren {
   DashboardRoute: typeof DashboardRoute
   LoginRoute: typeof LoginRoute
   RequestAccessRoute: typeof RequestAccessRoute
+  SignupRoute: typeof SignupRoute
+  UnauthorizedRoute: typeof UnauthorizedRoute
+  VerifyRoute: typeof VerifyRoute
+  OnboardingCompleteRoute: typeof OnboardingCompleteRoute
+  OnboardingEmployeesRoute: typeof OnboardingEmployeesRoute
+  OnboardingEmployessRoute: typeof OnboardingEmployessRoute
+  OnboardingOrganizationRoute: typeof OnboardingOrganizationRoute
+  OnboardingPropertyRoute: typeof OnboardingPropertyRoute
+  OnboardingRemindersRoute: typeof OnboardingRemindersRoute
+  OnboardingReviewRoute: typeof OnboardingReviewRoute
+  OnboardingWhatsappRoute: typeof OnboardingWhatsappRoute
+  SettleConnectorsRoute: typeof SettleConnectorsRoute
+  SettleFollowupsRoute: typeof SettleFollowupsRoute
+  SettleInboxRoute: typeof SettleInboxRoute
+  SettleSettingsRoute: typeof SettleSettingsRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/verify': {
+      id: '/verify'
+      path: '/verify'
+      fullPath: '/verify'
+      preLoaderRoute: typeof VerifyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/unauthorized': {
+      id: '/unauthorized'
+      path: '/unauthorized'
+      fullPath: '/unauthorized'
+      preLoaderRoute: typeof UnauthorizedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/signup': {
+      id: '/signup'
+      path: '/signup'
+      fullPath: '/signup'
+      preLoaderRoute: typeof SignupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/request-access': {
       id: '/request-access'
       path: '/request-access'
@@ -122,6 +348,90 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/settle/settings': {
+      id: '/settle/settings'
+      path: '/settle/settings'
+      fullPath: '/settle/settings'
+      preLoaderRoute: typeof SettleSettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settle/inbox': {
+      id: '/settle/inbox'
+      path: '/settle/inbox'
+      fullPath: '/settle/inbox'
+      preLoaderRoute: typeof SettleInboxRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settle/followups': {
+      id: '/settle/followups'
+      path: '/settle/followups'
+      fullPath: '/settle/followups'
+      preLoaderRoute: typeof SettleFollowupsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settle/connectors': {
+      id: '/settle/connectors'
+      path: '/settle/connectors'
+      fullPath: '/settle/connectors'
+      preLoaderRoute: typeof SettleConnectorsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/onboarding/whatsapp': {
+      id: '/onboarding/whatsapp'
+      path: '/onboarding/whatsapp'
+      fullPath: '/onboarding/whatsapp'
+      preLoaderRoute: typeof OnboardingWhatsappRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/onboarding/review': {
+      id: '/onboarding/review'
+      path: '/onboarding/review'
+      fullPath: '/onboarding/review'
+      preLoaderRoute: typeof OnboardingReviewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/onboarding/reminders': {
+      id: '/onboarding/reminders'
+      path: '/onboarding/reminders'
+      fullPath: '/onboarding/reminders'
+      preLoaderRoute: typeof OnboardingRemindersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/onboarding/property': {
+      id: '/onboarding/property'
+      path: '/onboarding/property'
+      fullPath: '/onboarding/property'
+      preLoaderRoute: typeof OnboardingPropertyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/onboarding/organization': {
+      id: '/onboarding/organization'
+      path: '/onboarding/organization'
+      fullPath: '/onboarding/organization'
+      preLoaderRoute: typeof OnboardingOrganizationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/onboarding/employess': {
+      id: '/onboarding/employess'
+      path: '/onboarding/employess'
+      fullPath: '/onboarding/employess'
+      preLoaderRoute: typeof OnboardingEmployessRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/onboarding/employees': {
+      id: '/onboarding/employees'
+      path: '/onboarding/employees'
+      fullPath: '/onboarding/employees'
+      preLoaderRoute: typeof OnboardingEmployeesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/onboarding/complete': {
+      id: '/onboarding/complete'
+      path: '/onboarding/complete'
+      fullPath: '/onboarding/complete'
+      preLoaderRoute: typeof OnboardingCompleteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -131,6 +441,21 @@ const rootRouteChildren: RootRouteChildren = {
   DashboardRoute: DashboardRoute,
   LoginRoute: LoginRoute,
   RequestAccessRoute: RequestAccessRoute,
+  SignupRoute: SignupRoute,
+  UnauthorizedRoute: UnauthorizedRoute,
+  VerifyRoute: VerifyRoute,
+  OnboardingCompleteRoute: OnboardingCompleteRoute,
+  OnboardingEmployeesRoute: OnboardingEmployeesRoute,
+  OnboardingEmployessRoute: OnboardingEmployessRoute,
+  OnboardingOrganizationRoute: OnboardingOrganizationRoute,
+  OnboardingPropertyRoute: OnboardingPropertyRoute,
+  OnboardingRemindersRoute: OnboardingRemindersRoute,
+  OnboardingReviewRoute: OnboardingReviewRoute,
+  OnboardingWhatsappRoute: OnboardingWhatsappRoute,
+  SettleConnectorsRoute: SettleConnectorsRoute,
+  SettleFollowupsRoute: SettleFollowupsRoute,
+  SettleInboxRoute: SettleInboxRoute,
+  SettleSettingsRoute: SettleSettingsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

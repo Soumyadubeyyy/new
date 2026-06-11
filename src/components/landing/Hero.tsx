@@ -1,6 +1,12 @@
 import { motion } from "framer-motion";
 import { Link } from "@tanstack/react-router";
-import { ArrowRight, Sparkles, FileText, Check, CheckCheck } from "lucide-react";
+import {
+  ArrowRight,
+  Sparkles,
+  FileText,
+  Check,
+  CheckCheck,
+} from "lucide-react";
 
 export function Hero() {
   return (
@@ -24,7 +30,10 @@ export function Hero() {
 
       {/* floating orbs */}
       <div className="absolute top-20 left-10 h-72 w-72 rounded-full bg-primary/20 blur-[120px] animate-pulse-glow" />
-      <div className="absolute bottom-0 right-10 h-96 w-96 rounded-full bg-violet-glow/20 blur-[140px] animate-pulse-glow" style={{ animationDelay: "2s" }} />
+      <div
+        className="absolute bottom-0 right-10 h-96 w-96 rounded-full bg-violet-glow/20 blur-[140px] animate-pulse-glow"
+        style={{ animationDelay: "2s" }}
+      />
 
       <div className="relative mx-auto max-w-6xl px-4">
         <motion.div
@@ -44,27 +53,26 @@ export function Hero() {
 
           <h1 className="font-display text-4xl sm:text-5xl md:text-7xl font-semibold tracking-tight max-w-4xl">
             Turn WhatsApp into your <br className="hidden sm:block" />
-            <span className="gradient-text-emerald">smart reporting</span> system
+            <span className="gradient-text-emerald">smart reporting</span>{" "}
+            system
           </h1>
 
           <p className="mt-6 max-w-2xl text-base md:text-lg text-muted-foreground leading-relaxed">
-            Collect reports, automate reminders, generate AI insights, and manage team workflows —
-            all directly through the chat your team already uses.
+            Collect reports, automate reminders, generate AI insights, and
+            manage team workflows — all directly through the chat your team
+            already uses.
           </p>
 
           <div className="mt-9 flex flex-col sm:flex-row items-center gap-3">
             <Link
-              to="/request-access"
+              to="/signup"
               className="group relative inline-flex items-center gap-2 rounded-xl bg-gradient-to-br from-primary to-blue-500 px-6 py-3 text-sm font-medium text-primary-foreground shadow-[0_8px_30px_-8px_oklch(0.55_0.20_275/0.45)] hover:scale-[1.02] transition-transform"
             >
-              Request Early Access
-              <ArrowRight size={16} className="group-hover:translate-x-0.5 transition-transform" />
-            </Link>
-            <Link
-              to="/book-demo"
-              className="inline-flex items-center gap-2 rounded-xl glass px-6 py-3 text-sm font-medium hover:bg-foreground/5 transition-colors"
-            >
-              Book a Demo
+              Sign up
+              <ArrowRight
+                size={16}
+                className="group-hover:translate-x-0.5 transition-transform"
+              />
             </Link>
           </div>
 
@@ -89,10 +97,16 @@ export function Hero() {
                   <div className="rounded-[2rem] bg-[#0b141a] overflow-hidden border border-border/60">
                     {/* WA header */}
                     <div className="flex items-center gap-3 px-4 py-3 bg-[#202c33]">
-                      <div className="h-9 w-9 rounded-full bg-gradient-to-br from-primary to-blue-500 grid place-items-center text-xs font-bold text-primary-foreground">S</div>
+                      <div className="h-9 w-9 rounded-full bg-gradient-to-br from-primary to-blue-500 grid place-items-center text-xs font-bold text-primary-foreground">
+                        S
+                      </div>
                       <div>
-                        <div className="text-sm font-medium text-white">Settle</div>
-                        <div className="text-[10px] text-emerald-600/80">online</div>
+                        <div className="text-sm font-medium text-white">
+                          Settle
+                        </div>
+                        <div className="text-[10px] text-emerald-600/80">
+                          online
+                        </div>
                       </div>
                     </div>
                     {/* messages */}
@@ -117,7 +131,8 @@ export function Hero() {
                           AI Summary
                         </div>
                         <p className="text-xs leading-relaxed">
-                          12 tasks complete · 3 pending · 0 blockers. Productivity up 18% vs yesterday.
+                          12 tasks complete · 3 pending · 0 blockers.
+                          Productivity up 18% vs yesterday.
                         </p>
                       </ChatBubble>
                       <ChatBubble side="left" delay={1.6}>
@@ -134,10 +149,16 @@ export function Hero() {
               <FloatCard delay={0.6} className="ml-auto max-w-sm">
                 <div className="flex items-center justify-between">
                   <div>
-                    <div className="text-xs text-muted-foreground">Reports today</div>
-                    <div className="font-display text-2xl font-semibold mt-1">128</div>
+                    <div className="text-xs text-muted-foreground">
+                      Reports today
+                    </div>
+                    <div className="font-display text-2xl font-semibold mt-1">
+                      128
+                    </div>
                   </div>
-                  <div className="text-xs px-2 py-1 rounded-md bg-primary/15 text-primary">+18%</div>
+                  <div className="text-xs px-2 py-1 rounded-md bg-primary/15 text-primary">
+                    +18%
+                  </div>
                 </div>
                 <div className="mt-3 flex gap-1 h-10 items-end">
                   {[40, 60, 35, 70, 55, 80, 65, 90, 75, 95].map((h, i) => (
@@ -156,24 +177,32 @@ export function Hero() {
                     <Sparkles size={16} className="text-violet-glow" />
                   </div>
                   <div className="flex-1">
-                    <div className="text-xs font-medium">AI processed 24 docs</div>
-                    <div className="text-[10px] text-muted-foreground">just now</div>
+                    <div className="text-xs font-medium">
+                      AI processed 24 docs
+                    </div>
+                    <div className="text-[10px] text-muted-foreground">
+                      just now
+                    </div>
                   </div>
                   <CheckCheck size={14} className="text-primary" />
                 </div>
               </FloatCard>
 
               <FloatCard delay={1.2} className="ml-12 max-w-sm">
-                <div className="text-xs text-muted-foreground mb-2">Team participation</div>
+                <div className="text-xs text-muted-foreground mb-2">
+                  Team participation
+                </div>
                 <div className="flex items-center gap-3">
                   <div className="flex -space-x-2">
-                    {["#10b981", "#a78bfa", "#60a5fa", "#f472b6"].map((c, i) => (
-                      <div
-                        key={i}
-                        className="h-7 w-7 rounded-full border-2 border-background"
-                        style={{ background: c }}
-                      />
-                    ))}
+                    {["#10b981", "#a78bfa", "#60a5fa", "#f472b6"].map(
+                      (c, i) => (
+                        <div
+                          key={i}
+                          className="h-7 w-7 rounded-full border-2 border-background"
+                          style={{ background: c }}
+                        />
+                      ),
+                    )}
                   </div>
                   <div className="flex-1 h-2 rounded-full bg-foreground/5 overflow-hidden">
                     <div className="h-full w-[82%] rounded-full bg-gradient-to-r from-primary to-violet-glow" />
@@ -189,7 +218,15 @@ export function Hero() {
   );
 }
 
-function ChatBubble({ side, children, delay }: { side: "left" | "right"; children: React.ReactNode; delay: number }) {
+function ChatBubble({
+  side,
+  children,
+  delay,
+}: {
+  side: "left" | "right";
+  children: React.ReactNode;
+  delay: number;
+}) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 8 }}
@@ -212,7 +249,15 @@ function ChatBubble({ side, children, delay }: { side: "left" | "right"; childre
   );
 }
 
-function FloatCard({ children, className = "", delay }: { children: React.ReactNode; className?: string; delay: number }) {
+function FloatCard({
+  children,
+  className = "",
+  delay,
+}: {
+  children: React.ReactNode;
+  className?: string;
+  delay: number;
+}) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}

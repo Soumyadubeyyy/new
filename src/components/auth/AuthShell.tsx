@@ -15,7 +15,10 @@ export function AuthShell({
 }) {
   return (
     <main className="relative min-h-screen flex items-center justify-center p-4 overflow-hidden noise">
-      <div className="absolute inset-0 -z-10" style={{ background: "var(--gradient-hero)" }} />
+      <div
+        className="absolute inset-0 -z-10"
+        style={{ background: "var(--gradient-hero)" }}
+      />
       <div className="absolute top-20 left-1/4 h-72 w-72 rounded-full bg-primary/15 blur-[120px]" />
       <div className="absolute bottom-10 right-1/4 h-72 w-72 rounded-full bg-violet-glow/15 blur-[120px]" />
 
@@ -33,21 +36,31 @@ export function AuthShell({
         className="w-full max-w-md"
       >
         <Link to="/" className="flex items-center gap-2 justify-center mb-8">
-          <div className="h-9 w-9 rounded-lg bg-gradient-to-br from-primary to-violet-glow grid place-items-center font-display font-bold text-primary-foreground">S</div>
+          <div className="h-9 w-9 rounded-lg bg-gradient-to-br from-primary to-violet-glow grid place-items-center font-display font-bold text-primary-foreground">
+            S
+          </div>
           <div className="flex flex-col leading-none">
             <span className="font-display font-semibold">Settle</span>
-            <span className="text-[10px] text-muted-foreground">by GooseLabs</span>
+            <span className="text-[10px] text-muted-foreground">
+              by GooseLabs
+            </span>
           </div>
         </Link>
 
         <div className="glass-strong rounded-2xl p-7 shadow-elevated">
-          <h1 className="font-display text-2xl font-semibold tracking-tight">{title}</h1>
+          <h1 className="font-display text-2xl font-semibold tracking-tight">
+            {title}
+          </h1>
           <p className="mt-1.5 text-sm text-muted-foreground">{subtitle}</p>
 
           <div className="mt-7">{children}</div>
         </div>
 
-        {footer && <div className="mt-6 text-center text-sm text-muted-foreground">{footer}</div>}
+        {footer && (
+          <div className="mt-6 text-center text-sm text-muted-foreground">
+            {footer}
+          </div>
+        )}
       </motion.div>
     </main>
   );
@@ -61,7 +74,9 @@ export function Field({
 }: React.InputHTMLAttributes<HTMLInputElement> & { label: string }) {
   return (
     <label className="block">
-      <span className="text-xs text-muted-foreground mb-1.5 block">{label}</span>
+      <span className="text-xs text-muted-foreground mb-1.5 block">
+        {label}
+      </span>
       <input
         type={type}
         placeholder={placeholder}
@@ -72,7 +87,10 @@ export function Field({
   );
 }
 
-export function PrimaryButton({ children, ...rest }: React.ButtonHTMLAttributes<HTMLButtonElement>) {
+export function PrimaryButton({
+  children,
+  ...rest
+}: React.ButtonHTMLAttributes<HTMLButtonElement>) {
   return (
     <button
       {...rest}

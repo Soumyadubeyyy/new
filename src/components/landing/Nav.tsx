@@ -33,7 +33,9 @@ export function Nav() {
       <div className="mx-auto max-w-6xl px-4">
         <div
           className={`flex items-center justify-between rounded-2xl px-4 py-3 transition-all duration-500 ${
-            scrolled ? "glass-strong shadow-[0_8px_40px_-12px_rgba(0,0,0,0.5)]" : ""
+            scrolled
+              ? "glass-strong shadow-[0_8px_40px_-12px_rgba(0,0,0,0.5)]"
+              : ""
           }`}
         >
           <Link to="/" className="flex items-center gap-2 group">
@@ -42,8 +44,12 @@ export function Nav() {
               <div className="absolute inset-0 rounded-lg bg-gradient-to-br from-primary to-violet-glow blur-md opacity-50 group-hover:opacity-80 transition-opacity -z-10" />
             </div>
             <div className="flex flex-col leading-none">
-              <span className="font-display font-semibold tracking-tight">Settle</span>
-              <span className="text-[10px] text-muted-foreground">by GooseLabs</span>
+              <span className="font-display font-semibold tracking-tight">
+                Settle
+              </span>
+              <span className="text-[10px] text-muted-foreground">
+                by GooseLabs
+              </span>
             </div>
           </Link>
 
@@ -67,10 +73,10 @@ export function Nav() {
               Login
             </Link>
             <Link
-              to="/request-access"
+              to="/signup"
               className="relative px-4 py-2 text-sm font-medium rounded-lg bg-gradient-to-br from-primary to-blue-500 text-primary-foreground hover:scale-[1.02] transition-transform shadow-[0_4px_20px_-4px_oklch(0.55_0.20_275/0.40)]"
             >
-              Request Access
+              Sign up
             </Link>
           </div>
 
@@ -99,12 +105,14 @@ export function Nav() {
                 {l.label}
               </a>
             ))}
-            <Link to="/login" className="px-3 py-2 text-sm">Login</Link>
+            <Link to="/login" className="px-3 py-2 text-sm">
+              Login
+            </Link>
             <Link
-              to="/request-access"
+              to="/signup"
               className="px-3 py-2 text-sm text-center rounded-lg bg-gradient-to-br from-primary to-blue-500 text-primary-foreground font-medium"
             >
-              Request Access
+              Sign up
             </Link>
           </motion.div>
         )}

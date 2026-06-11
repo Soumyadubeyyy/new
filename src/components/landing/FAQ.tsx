@@ -61,7 +61,11 @@ export function FAQ() {
       <div className="mx-auto max-w-3xl px-4">
         <SectionHeader
           eyebrow="FAQ"
-          title={<>Questions, <span className="gradient-text-emerald">answered</span></>}
+          title={
+            <>
+              Questions, <span className="gradient-text-emerald">answered</span>
+            </>
+          }
           subtitle="Still unclear? Reach out to the team — we reply fast."
         />
 
@@ -81,7 +85,9 @@ export function FAQ() {
                   onClick={() => setOpen(isOpen ? null : i)}
                   className="w-full flex items-center justify-between gap-4 px-5 py-4 text-left hover:bg-foreground/5 transition-colors"
                 >
-                  <span className="font-medium text-sm md:text-base">{f.q}</span>
+                  <span className="font-medium text-sm md:text-base">
+                    {f.q}
+                  </span>
                   <div className="h-7 w-7 rounded-full grid place-items-center glass shrink-0">
                     {isOpen ? <Minus size={14} /> : <Plus size={14} />}
                   </div>
@@ -95,7 +101,9 @@ export function FAQ() {
                       transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
                       className="overflow-hidden"
                     >
-                      <p className="px-5 pb-5 text-sm text-muted-foreground leading-relaxed">{f.a}</p>
+                      <p className="px-5 pb-5 text-sm text-muted-foreground leading-relaxed">
+                        {f.a}
+                      </p>
                     </motion.div>
                   )}
                 </AnimatePresence>

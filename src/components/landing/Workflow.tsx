@@ -1,5 +1,11 @@
 import { motion } from "framer-motion";
-import { Building2, UserPlus, MessageCircle, Sparkles, Check } from "lucide-react";
+import {
+  Building2,
+  UserPlus,
+  MessageCircle,
+  Sparkles,
+  Check,
+} from "lucide-react";
 import { SectionHeader } from "./Feature";
 
 const steps = [
@@ -33,7 +39,8 @@ export function Workflow() {
         <div
           className="h-full w-full opacity-30"
           style={{
-            backgroundImage: "radial-gradient(circle at 50% 50%, oklch(0.78 0.18 158 / 0.15), transparent 60%)",
+            backgroundImage:
+              "radial-gradient(circle at 50% 50%, oklch(0.78 0.18 158 / 0.15), transparent 60%)",
           }}
         />
       </div>
@@ -41,7 +48,12 @@ export function Workflow() {
       <div className="mx-auto max-w-6xl px-4">
         <SectionHeader
           eyebrow="How it works"
-          title={<>From setup to first insight in <span className="gradient-text-emerald">3 steps</span></>}
+          title={
+            <>
+              From setup to first insight in{" "}
+              <span className="gradient-text-emerald">3 steps</span>
+            </>
+          }
           subtitle="No onboarding workshops. No new apps to install. Your team keeps using WhatsApp."
         />
 
@@ -60,13 +72,21 @@ export function Workflow() {
             >
               <div className="glass-strong rounded-2xl p-6 h-full">
                 <div className="flex items-center justify-between">
-                  <div className={`h-12 w-12 rounded-2xl grid place-items-center ${s.tint}`}>
+                  <div
+                    className={`h-12 w-12 rounded-2xl grid place-items-center ${s.tint}`}
+                  >
                     <s.icon size={20} />
                   </div>
-                  <span className="font-display text-3xl font-semibold text-foreground/10">{s.n}</span>
+                  <span className="font-display text-3xl font-semibold text-foreground/10">
+                    {s.n}
+                  </span>
                 </div>
-                <h3 className="mt-5 font-display text-lg font-medium">{s.title}</h3>
-                <p className="mt-2 text-sm text-muted-foreground leading-relaxed">{s.desc}</p>
+                <h3 className="mt-5 font-display text-lg font-medium">
+                  {s.title}
+                </h3>
+                <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
+                  {s.desc}
+                </p>
               </div>
             </motion.div>
           ))}
@@ -91,13 +111,26 @@ export function Workflow() {
               <p>Got it — analyzing image and notes…</p>
             </Bubble>
             <Bubble side="left" ai>
-              <p className="font-medium mb-1.5">📋 Daily Site Report — Block C</p>
+              <p className="font-medium mb-1.5">
+                📋 Daily Site Report — Block C
+              </p>
               <ul className="text-xs space-y-1 opacity-90">
-                <li className="flex gap-2"><Check size={12} className="text-primary mt-0.5" /> 32 workers on-site</li>
-                <li className="flex gap-2"><Check size={12} className="text-primary mt-0.5" /> Concrete pour: 80% complete</li>
-                <li className="flex gap-2"><Check size={12} className="text-primary mt-0.5" /> 0 safety incidents</li>
+                <li className="flex gap-2">
+                  <Check size={12} className="text-primary mt-0.5" /> 32 workers
+                  on-site
+                </li>
+                <li className="flex gap-2">
+                  <Check size={12} className="text-primary mt-0.5" /> Concrete
+                  pour: 80% complete
+                </li>
+                <li className="flex gap-2">
+                  <Check size={12} className="text-primary mt-0.5" /> 0 safety
+                  incidents
+                </li>
               </ul>
-              <div className="mt-2 text-[10px] opacity-60">Saved to dashboard · Visible to 2 admins</div>
+              <div className="mt-2 text-[10px] opacity-60">
+                Saved to dashboard · Visible to 2 admins
+              </div>
             </Bubble>
           </div>
         </motion.div>
@@ -106,9 +139,19 @@ export function Workflow() {
   );
 }
 
-function Bubble({ side, children, ai }: { side: "left" | "right"; children: React.ReactNode; ai?: boolean }) {
+function Bubble({
+  side,
+  children,
+  ai,
+}: {
+  side: "left" | "right";
+  children: React.ReactNode;
+  ai?: boolean;
+}) {
   return (
-    <div className={`flex ${side === "right" ? "justify-end" : "justify-start"}`}>
+    <div
+      className={`flex ${side === "right" ? "justify-end" : "justify-start"}`}
+    >
       <div
         className={`max-w-md rounded-2xl px-4 py-2.5 text-sm ${
           side === "right"
