@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Link } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 import {
   TrendingUp,
@@ -137,6 +138,12 @@ export function DashboardPreview() {
                         <Plus size={14} />
                         Add Members
                       </button>
+                      <Link
+                        to="/settle/connectors"
+                        className="inline-flex items-center gap-1.5 text-[11px] px-3 py-1.5 rounded-md bg-primary text-primary-foreground hover:opacity-90 transition-opacity font-medium"
+                      >
+                        Connectors
+                      </Link>
                       <div className="text-[11px] px-2.5 py-1 rounded-md glass">
                         Today
                       </div>

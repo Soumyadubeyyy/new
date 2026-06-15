@@ -1,12 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { SettleShell } from "@/components/settle-core/SettleShell";
 import {
-  Upload,
-  Star,
   MessageSquare,
-  Database,
+  Instagram,
+  Mail,
   CheckCircle,
   AlertCircle,
   RefreshCw,
@@ -15,10 +14,16 @@ import {
   ArrowLeft,
   Loader,
   Wifi,
-  Link,
-  FileText,
   PlugZap,
+  Globe,
+  Settings,
+  Shield,
+  FileText,
+  Lock,
+  ExternalLink,
 } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/settle/connectors")({
   head: () => ({ meta: [{ title: "Connectors · Settle" }] }),
@@ -26,616 +31,1180 @@ export const Route = createFileRoute("/settle/connectors")({
 });
 
 /* ─── Types ──────────────────────────────────────────────── */
-type ConnectorHealth = "active" | "expired" | "failed" | "not_connected";
-type ConnectorCategory = "easy" | "standard" | "advanced";
-type ActivationPhase = "idle" | "connect" | "pull" | "normalise" | "status";
+type ConnectorStatus =
+  | "Not Connected"
+  | "Connecting"
+  | "Connected"
+  | "Error"
+  | "Verification Required";
 
 interface Connector {
-  id: string;
+  id: "whatsapp" | "instagram" | "gmail";
   name: string;
   description: string;
-  category: ConnectorCategory;
-  icon: typeof Upload;
+  icon: any;
   iconColor: string;
   iconBg: string;
-  health: ConnectorHealth;
-  lastSync?: string;
-  authType: "file" | "oauth" | "api_key";
 }
 
-/* ─── Connectors catalog ─────────────────────────────────── */
-const CONNECTORS: Connector[] = [
+const CONNECTORS_LIST: Connector[] = [
   {
-    id: "csv",
-    name: "CSV / Excel Upload",
-    description: "Import reservation & revenue data via drag-and-drop file upload",
-    category: "easy",
-    icon: Upload,
-    iconColor: "text-emerald-600",
-    iconBg: "bg-emerald-500/10",
-    health: "active",
-    lastSync: "Today, 8:00 AM",
-    authType: "file",
-  },
-  {
-    id: "gmb",
-    name: "Google My Business",
-    description: "Pull reviews, ratings, and Q&A from your GMB listing automatically",
-    category: "easy",
-    icon: Star,
-    iconColor: "text-amber-600",
-    iconBg: "bg-amber-500/10",
-    health: "active",
-    lastSync: "Today, 6:30 AM",
-    authType: "oauth",
-  },
-  {
-    id: "whatsapp_bsp",
-    name: "WhatsApp Business API",
-    description: "Connect via BSP (e.g. Interakt, Gupshup) for inbound lead capture & AI replies",
-    category: "standard",
+    id: "whatsapp",
+    name: "WhatsApp Business",
+    description: "Connect your WhatsApp Business Account through Meta Business Manager.",
     icon: MessageSquare,
-    iconColor: "text-emerald-600",
+    iconColor: "text-emerald-500",
     iconBg: "bg-emerald-500/10",
-    health: "active",
-    lastSync: "Live",
-    authType: "api_key",
   },
   {
-    id: "hotelogix",
-    name: "Hotelogix PMS",
-    description: "Sync reservations, room inventory & guest profiles from Hotelogix",
-    category: "advanced",
-    icon: Database,
-    iconColor: "text-sky-600",
-    iconBg: "bg-sky-500/10",
-    health: "expired",
-    lastSync: "3 days ago",
-    authType: "api_key",
-  },
-  {
-    id: "ids_next",
-    name: "IDS Next PMS",
-    description: "Bidirectional sync with IDS Next for revenue, F&B covers & occupancy data",
-    category: "advanced",
-    icon: Database,
-    iconColor: "text-violet-600",
-    iconBg: "bg-violet-500/10",
-    health: "not_connected",
-    authType: "api_key",
-  },
-  {
-    id: "pos",
-    name: "Generic POS (REST)",
-    description: "Connect your restaurant POS via REST API for F&B cover tracking",
-    category: "advanced",
-    icon: Link,
-    iconColor: "text-pink-600",
+    id: "instagram",
+    name: "Instagram Business",
+    description: "Connect your Instagram Business Account through Meta Business Manager.",
+    icon: Instagram,
+    iconColor: "text-pink-500",
     iconBg: "bg-pink-500/10",
-    health: "failed",
-    lastSync: "Failed 12 hrs ago",
-    authType: "api_key",
+  },
+  {
+    id: "gmail",
+    name: "Gmail",
+    description: "Connect your Gmail account using Google OAuth.",
+    icon: Mail,
+    iconColor: "text-red-500",
+    iconBg: "bg-red-500/10",
   },
 ];
 
-/* ─── Health badge ───────────────────────────────────────── */
-const HEALTH_CONFIG: Record<
-  ConnectorHealth,
-  { label: string; classes: string; icon: typeof CheckCircle; dot: string }
+/* Status Config for Badges */
+const STATUS_CONFIG: Record<
+  ConnectorStatus,
+  { label: string; classes: string; dot: string }
 > = {
-  active: {
-    label: "Connected · Active Syncing",
-    classes: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
-    icon: CheckCircle,
+  "Connected": {
+    label: "Connected",
+    classes: "bg-emerald-500/10 text-emerald-500 border-emerald-500/20",
     dot: "bg-emerald-500",
   },
-  expired: {
-    label: "Token Expired · Re-authenticate",
-    classes: "bg-amber-500/10 text-amber-600 border-amber-500/20",
-    icon: AlertCircle,
+  "Connecting": {
+    label: "Connecting",
+    classes: "bg-blue-500/10 text-blue-500 border-blue-500/20",
+    dot: "bg-blue-500",
+  },
+  "Verification Required": {
+    label: "Verification Required",
+    classes: "bg-amber-500/10 text-amber-500 border-amber-500/20",
     dot: "bg-amber-500",
   },
-  failed: {
-    label: "Failed · Check Error Log",
-    classes: "bg-red-500/10 text-red-600 border-red-500/20",
-    icon: XCircle,
+  "Error": {
+    label: "Error",
+    classes: "bg-red-500/10 text-red-500 border-red-500/20",
     dot: "bg-red-500",
   },
-  not_connected: {
+  "Not Connected": {
     label: "Not Connected",
     classes: "bg-foreground/5 text-muted-foreground border-border/40",
-    icon: Wifi,
     dot: "bg-muted-foreground/40",
   },
 };
 
-function HealthBadge({ health }: { health: ConnectorHealth }) {
-  const cfg = HEALTH_CONFIG[health];
-  const Icon = cfg.icon;
+function StatusBadge({ status }: { status: ConnectorStatus }) {
+  const cfg = STATUS_CONFIG[status];
   return (
     <span
-      className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[9px] font-semibold border ${cfg.classes}`}
+      className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-semibold border ${cfg.classes}`}
     >
       <span className={`h-1.5 w-1.5 rounded-full ${cfg.dot}`} />
-      <Icon size={9} />
       {cfg.label}
     </span>
   );
 }
 
-const CATEGORY_LABELS: Record<ConnectorCategory, string> = {
-  easy: "Quick Setup",
-  standard: "Standard",
-  advanced: "PMS Integrations",
-};
+function ConnectorsPage() {
+  const [activeTab, setActiveTab] = useState<"marketplace" | "details">("marketplace");
+  const [selectedConnector, setSelectedConnector] = useState<Connector | null>(null);
+  const [env, setEnv] = useState<"TEST" | "PRODUCTION">("TEST");
 
-/* ─── Activation panel ───────────────────────────────────── */
-const PHASES = ["connect", "pull", "normalise", "status"] as const;
+  // Config fields
+  const [metaClientId, setMetaClientId] = useState("");
+  const [metaRedirectUrl, setMetaRedirectUrl] = useState("");
+  const [googleClientId, setGoogleClientId] = useState("");
+  const [googleRedirectUrl, setGoogleRedirectUrl] = useState("");
+  const [webhookUrl, setWebhookUrl] = useState("");
 
-const PHASE_META = {
-  connect: {
-    label: "Configuration",
-    desc: "Provide credentials or authorise access",
-    icon: PlugZap,
-  },
-  pull: {
-    label: "Ingestion",
-    desc: "Extracting data from source",
-    icon: RefreshCw,
-  },
-  normalise: {
-    label: "Normalisation",
-    desc: "Mapping to Settle entity schema",
-    icon: Database,
-  },
-  status: {
-    label: "Health Check",
-    desc: "Verifying connection health",
-    icon: CheckCircle,
-  },
-};
+  // Statuses
+  const [whatsappStatus, setWhatsappStatus] = useState<ConnectorStatus>("Not Connected");
+  const [instagramStatus, setInstagramStatus] = useState<ConnectorStatus>("Not Connected");
+  const [gmailStatus, setGmailStatus] = useState<ConnectorStatus>("Not Connected");
 
-const SETTLE_ENTITIES = [
-  "Property",
-  "Guest",
-  "Lead",
-  "Reservation",
-  "Review",
-  "Vendor",
-  "Task",
-  "Transaction",
-];
+  // Details
+  const [whatsappDetails, setWhatsappDetails] = useState<any>({});
+  const [instagramDetails, setInstagramDetails] = useState<any>({});
+  const [gmailDetails, setGmailDetails] = useState<any>({});
 
-function ActivationPanel({
-  connector,
-  onClose,
-}: {
-  connector: Connector;
-  onClose: () => void;
-}) {
-  const [phase, setPhase] = useState<ActivationPhase>("connect");
-  const [apiKey, setApiKey] = useState("");
-  const [file, setFile] = useState<File | null>(null);
-  const [running, setRunning] = useState(false);
-  const [entityProgress, setEntityProgress] = useState<string[]>([]);
-  const [done, setDone] = useState(false);
+  // Wizard state
+  const [wizardOpen, setWizardOpen] = useState(false);
+  const [wizardStep, setWizardStep] = useState(1);
+  const [wizardData, setWizardData] = useState<any>({});
 
-  const handleConnect = () => {
-    setRunning(true);
-    setPhase("pull");
+  // Load from localStorage
+  useEffect(() => {
+    const savedEnv = (localStorage.getItem("settle_connector_env") as any) || "TEST";
+    setEnv(savedEnv);
 
-    // Simulate pull phase
-    setTimeout(() => {
-      setPhase("normalise");
-      let i = 0;
-      const interval = setInterval(() => {
-        if (i < SETTLE_ENTITIES.length) {
-          setEntityProgress((prev) => [...prev, SETTLE_ENTITIES[i]]);
-          i++;
-        } else {
-          clearInterval(interval);
-          setPhase("status");
-          setTimeout(() => {
-            setRunning(false);
-            setDone(true);
-          }, 800);
-        }
-      }, 250);
-    }, 1800);
+    // Load configs
+    setMetaClientId(localStorage.getItem(`settle_meta_client_id_${savedEnv}`) || "");
+    setMetaRedirectUrl(localStorage.getItem(`settle_meta_redirect_url_${savedEnv}`) || "");
+    setGoogleClientId(localStorage.getItem(`settle_google_client_id_${savedEnv}`) || "");
+    setGoogleRedirectUrl(localStorage.getItem(`settle_google_redirect_url_${savedEnv}`) || "");
+    setWebhookUrl(localStorage.getItem(`settle_webhook_url_${savedEnv}`) || "");
+
+    // Load statuses
+    setWhatsappStatus((localStorage.getItem("settle_connector_whatsapp_status") as ConnectorStatus) || "Not Connected");
+    setInstagramStatus((localStorage.getItem("settle_connector_instagram_status") as ConnectorStatus) || "Not Connected");
+    setGmailStatus((localStorage.getItem("settle_connector_gmail_status") as ConnectorStatus) || "Not Connected");
+
+    // Load details
+    setWhatsappDetails(JSON.parse(localStorage.getItem("settle_connector_whatsapp_details") || "{}"));
+    setInstagramDetails(JSON.parse(localStorage.getItem("settle_connector_instagram_details") || "{}"));
+    setGmailDetails(JSON.parse(localStorage.getItem("settle_connector_gmail_details") || "{}"));
+  }, []);
+
+  const saveConfig = (key: string, val: string) => {
+    localStorage.setItem(`${key}_${env}`, val);
+    if (key === "settle_meta_client_id") setMetaClientId(val);
+    if (key === "settle_meta_redirect_url") setMetaRedirectUrl(val);
+    if (key === "settle_google_client_id") setGoogleClientId(val);
+    if (key === "settle_google_redirect_url") setGoogleRedirectUrl(val);
+    if (key === "settle_webhook_url") setWebhookUrl(val);
   };
 
-  const phaseIndex = PHASES.indexOf(
-    phase === "idle" ? "connect" : (phase as (typeof PHASES)[number])
-  );
+  const handleEnvChange = (newEnv: "TEST" | "PRODUCTION") => {
+    setEnv(newEnv);
+    localStorage.setItem("settle_connector_env", newEnv);
+    // Reload configs for this environment
+    setMetaClientId(localStorage.getItem(`settle_meta_client_id_${newEnv}`) || "");
+    setMetaRedirectUrl(localStorage.getItem(`settle_meta_redirect_url_${newEnv}`) || "");
+    setGoogleClientId(localStorage.getItem(`settle_google_client_id_${newEnv}`) || "");
+    setGoogleRedirectUrl(localStorage.getItem(`settle_google_redirect_url_${newEnv}`) || "");
+    setWebhookUrl(localStorage.getItem(`settle_webhook_url_${newEnv}`) || "");
+  };
 
-  return (
-    <motion.div
-      initial={{ opacity: 0, x: 20 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: 20 }}
-      transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-      className="max-w-xl mx-auto"
-    >
-      {/* Back */}
-      <button
-        type="button"
-        onClick={onClose}
-        className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground mb-5 transition"
-      >
-        <ArrowLeft size={13} /> All connectors
-      </button>
+  const getStatus = (id: string) => {
+    if (id === "whatsapp") return whatsappStatus;
+    if (id === "instagram") return instagramStatus;
+    return gmailStatus;
+  };
 
-      {/* Title */}
-      <div className="flex items-center gap-3 mb-6">
-        <div
-          className={`h-10 w-10 rounded-xl grid place-items-center ${connector.iconBg}`}
-        >
-          <connector.icon size={18} className={connector.iconColor} />
-        </div>
-        <div>
-          <h2 className="font-display font-semibold text-base">
-            {connector.name}
-          </h2>
-          <p className="text-xs text-muted-foreground">
-            {connector.description}
-          </p>
-        </div>
-      </div>
+  const getDetails = (id: string) => {
+    if (id === "whatsapp") return whatsappDetails;
+    if (id === "instagram") return instagramDetails;
+    return gmailDetails;
+  };
 
-      {/* Phase stepper */}
-      <div className="flex items-center gap-1 mb-6">
-        {PHASES.map((p, i) => {
-          const meta = PHASE_META[p];
-          const Icon = meta.icon;
-          const isActive = p === phase;
-          const isDone = i < phaseIndex || done;
-          return (
-            <div key={p} className="flex items-center gap-1 flex-1 last:flex-none">
-              <div className="flex flex-col items-center gap-1">
-                <div
-                  className={`h-7 w-7 rounded-full grid place-items-center text-[10px] font-bold transition-all duration-300 ${
-                    isDone
-                      ? "bg-primary text-primary-foreground"
-                      : isActive
-                      ? "bg-primary text-primary-foreground ring-4 ring-primary/20"
-                      : "bg-foreground/8 text-muted-foreground"
-                  }`}
-                >
-                  {isDone ? <CheckCircle size={12} /> : <Icon size={12} />}
-                </div>
-                <span
-                  className={`text-[9px] whitespace-nowrap hidden sm:block ${
-                    isActive ? "text-foreground font-medium" : "text-muted-foreground"
-                  }`}
-                >
-                  {meta.label}
-                </span>
-              </div>
-              {i < PHASES.length - 1 && (
-                <div
-                  className={`flex-1 h-px mx-1 mb-3.5 transition-colors duration-300 ${
-                    isDone ? "bg-primary" : "bg-border"
-                  }`}
-                />
-              )}
-            </div>
-          );
-        })}
-      </div>
+  const updateStatus = (id: "whatsapp" | "instagram" | "gmail", status: ConnectorStatus, details: any) => {
+    if (id === "whatsapp") {
+      setWhatsappStatus(status);
+      setWhatsappDetails(details);
+      localStorage.setItem("settle_connector_whatsapp_status", status);
+      localStorage.setItem("settle_connector_whatsapp_details", JSON.stringify(details));
+    } else if (id === "instagram") {
+      setInstagramStatus(status);
+      setInstagramDetails(details);
+      localStorage.setItem("settle_connector_instagram_status", status);
+      localStorage.setItem("settle_connector_instagram_details", JSON.stringify(details));
+    } else {
+      setGmailStatus(status);
+      setGmailDetails(details);
+      localStorage.setItem("settle_connector_gmail_status", status);
+      localStorage.setItem("settle_connector_gmail_details", JSON.stringify(details));
+    }
+  };
 
-      {/* Phase content */}
-      <div className="rounded-2xl border border-border/60 bg-card p-5 glass">
-        <AnimatePresence mode="wait">
-          {/* ── Connect phase ── */}
-          {(phase === "connect" || phase === "idle") && !done && (
-            <motion.div
-              key="connect"
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: 0.25 }}
-              className="space-y-4"
-            >
-              <div>
-                <p className="text-xs font-semibold mb-3 text-foreground">
-                  {PHASE_META.connect.desc}
-                </p>
+  const startConnect = (conn: Connector) => {
+    setSelectedConnector(conn);
+    setWizardStep(1);
+    setWizardData({});
+    setWizardOpen(true);
+  };
 
-                {connector.authType === "file" && (
-                  <label className="flex flex-col items-center justify-center gap-3 p-6 rounded-xl border-2 border-dashed border-border/60 hover:border-primary/40 transition cursor-pointer bg-input/50">
-                    <FileText size={24} className="text-muted-foreground" />
-                    <span className="text-xs text-muted-foreground text-center">
-                      {file
-                        ? `✓ ${file.name}`
-                        : "Drag & drop your CSV/Excel file here, or click to browse"}
-                    </span>
-                    <input
-                      type="file"
-                      accept=".csv,.xlsx,.xls"
-                      className="sr-only"
-                      onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-                    />
-                  </label>
-                )}
+  const handleDisconnect = (id: "whatsapp" | "instagram" | "gmail") => {
+    updateStatus(id, "Not Connected", {});
+    toast.info(`${id.toUpperCase()} disconnected.`);
+    setActiveTab("marketplace");
+    setSelectedConnector(null);
+  };
 
-                {connector.authType === "oauth" && (
-                  <button
-                    type="button"
-                    className="w-full flex items-center justify-center gap-2 rounded-xl border border-border/60 bg-input px-4 py-3 text-sm font-medium hover:bg-foreground/5 transition"
-                  >
-                    <Star size={14} className="text-amber-500" />
-                    Authorise with Google
-                  </button>
-                )}
+  const handleReconnect = (conn: Connector) => {
+    startConnect(conn);
+  };
 
-                {connector.authType === "api_key" && (
-                  <div className="space-y-3">
-                    <div>
-                      <label className="text-xs text-muted-foreground mb-1.5 block">
-                        API Key / Access Token
-                      </label>
-                      <input
-                        type="password"
-                        placeholder="Enter your API key…"
-                        value={apiKey}
-                        onChange={(e) => setApiKey(e.target.value)}
-                        className="w-full rounded-lg bg-input border border-border/60 px-3.5 py-2.5 text-sm placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/30 transition"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-xs text-muted-foreground mb-1.5 block">
-                        Property / Account ID
-                      </label>
-                      <input
-                        type="text"
-                        placeholder="e.g. PROP_12345"
-                        className="w-full rounded-lg bg-input border border-border/60 px-3.5 py-2.5 text-sm placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/30 transition"
-                      />
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              <button
-                type="button"
-                onClick={handleConnect}
-                disabled={
-                  running ||
-                  (connector.authType === "file" && !file) ||
-                  (connector.authType === "api_key" && !apiKey.trim())
-                }
-                className="w-full inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-br from-primary to-blue-500 px-4 py-2.5 text-sm font-medium text-primary-foreground shadow-[0_6px_20px_-6px_oklch(0.55_0.20_275/0.4)] hover:scale-[1.01] disabled:opacity-50 disabled:scale-100 transition-transform"
-              >
-                <PlugZap size={14} /> Connect & Ingest Data
-              </button>
-            </motion.div>
-          )}
-
-          {/* ── Pull + Normalise phase ── */}
-          {(phase === "pull" || phase === "normalise") && !done && (
-            <motion.div
-              key="pulling"
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: 0.25 }}
-              className="space-y-4"
-            >
-              <div className="flex items-center gap-3 mb-2">
-                <Loader size={16} className="text-primary animate-spin" />
-                <p className="text-sm font-medium">
-                  {phase === "pull"
-                    ? "Pulling data from source…"
-                    : "Normalising to Settle schema…"}
-                </p>
-              </div>
-
-              {phase === "normalise" && (
-                <div className="space-y-1.5">
-                  <p className="text-[11px] text-muted-foreground mb-2">
-                    Mapping entities:
-                  </p>
-                  {SETTLE_ENTITIES.map((entity) => {
-                    const isDone = entityProgress.includes(entity);
-                    return (
-                      <motion.div
-                        key={entity}
-                        className={`flex items-center gap-2 text-xs rounded-lg px-3 py-1.5 border transition-all ${
-                          isDone
-                            ? "border-emerald-500/20 bg-emerald-500/5 text-emerald-700"
-                            : "border-border/40 bg-foreground/3 text-muted-foreground"
-                        }`}
-                        animate={{ opacity: isDone ? 1 : 0.5 }}
-                      >
-                        {isDone ? (
-                          <CheckCircle size={11} className="text-emerald-500" />
-                        ) : (
-                          <div className="h-2.5 w-2.5 rounded-full bg-border" />
-                        )}
-                        {entity}
-                      </motion.div>
-                    );
-                  })}
-                </div>
-              )}
-            </motion.div>
-          )}
-
-          {/* ── Status phase ── */}
-          {(phase === "status" || done) && (
-            <motion.div
-              key="status"
-              initial={{ opacity: 0, scale: 0.97 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-              className="space-y-4"
-            >
-              <div className="flex flex-col items-center text-center py-3 gap-3">
-                <div className="h-12 w-12 rounded-full bg-emerald-500/15 grid place-items-center">
-                  <CheckCircle size={24} className="text-emerald-600" />
-                </div>
-                <div>
-                  <p className="text-sm font-semibold text-foreground">
-                    {connector.name} is now connected!
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    All {SETTLE_ENTITIES.length} entity types synced successfully.
-                  </p>
-                </div>
-              </div>
-
-              {/* Health diagnostic */}
-              <div className="space-y-2 p-3 rounded-xl bg-input border border-border/50">
-                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
-                  Connection Health
-                </p>
-                <HealthBadge health="active" />
-                <div className="grid grid-cols-2 gap-2 mt-2 text-[10px] text-muted-foreground">
-                  <span>Last sync: Just now</span>
-                  <span>Entities: {SETTLE_ENTITIES.length} types</span>
-                  <span>Status: Active</span>
-                  <span>Next sync: 1 hour</span>
-                </div>
-              </div>
-
-              <button
-                type="button"
-                onClick={onClose}
-                className="w-full inline-flex items-center justify-center gap-2 rounded-lg border border-primary/40 bg-primary/8 px-4 py-2.5 text-sm font-medium text-primary hover:bg-primary/15 transition"
-              >
-                ← Back to Connectors
-              </button>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
-    </motion.div>
-  );
-}
-
-/* ─── Connector card ─────────────────────────────────────── */
-function ConnectorCard({
-  connector,
-  onClick,
-}: {
-  connector: Connector;
-  onClick: () => void;
-}) {
-  const cfg = HEALTH_CONFIG[connector.health];
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="group w-full text-left p-4 rounded-2xl border border-border/60 bg-card hover:border-primary/30 hover:shadow-soft transition-all glass"
-    >
-      <div className="flex items-start justify-between gap-2 mb-3">
-        <div
-          className={`h-9 w-9 rounded-xl grid place-items-center ${connector.iconBg} group-hover:scale-105 transition-transform`}
-        >
-          <connector.icon size={16} className={connector.iconColor} />
-        </div>
-        <ChevronRight
-          size={14}
-          className="text-muted-foreground group-hover:text-foreground group-hover:translate-x-0.5 transition-all mt-1"
-        />
-      </div>
-      <div className="mb-2">
-        <p className="text-xs font-semibold mb-0.5">{connector.name}</p>
-        <p className="text-[10px] text-muted-foreground leading-relaxed line-clamp-2">
-          {connector.description}
-        </p>
-      </div>
-      <div className="flex items-center justify-between gap-2">
-        <HealthBadge health={connector.health} />
-        {connector.lastSync && (
-          <span className="text-[9px] text-muted-foreground">
-            {connector.lastSync}
-          </span>
-        )}
-      </div>
-    </button>
-  );
-}
-
-/* ─── Main page ──────────────────────────────────────────── */
-function ConnectorsPage() {
-  const [active, setActive] = useState<Connector | null>(null);
-
-  const grouped = (
-    ["easy", "standard", "advanced"] as ConnectorCategory[]
-  ).reduce<Record<ConnectorCategory, Connector[]>>(
-    (acc, cat) => {
-      acc[cat] = CONNECTORS.filter((c) => c.category === cat);
-      return acc;
-    },
-    { easy: [], standard: [], advanced: [] }
-  );
+  const handleRefresh = (id: "whatsapp" | "instagram" | "gmail") => {
+    toast.success("Connection status refreshed!");
+  };
 
   return (
     <SettleShell>
-      <div className="max-w-3xl mx-auto px-4 py-6">
-        <AnimatePresence mode="wait">
-          {active ? (
-            <motion.div
-              key="panel"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-            >
-              <ActivationPanel
-                connector={active}
-                onClose={() => setActive(null)}
-              />
-            </motion.div>
-          ) : (
-            <motion.div
-              key="grid"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-            >
-              {/* Header */}
-              <div className="mb-6">
-                <h1 className="font-display text-xl font-semibold tracking-tight mb-1">
-                  Integration Marketplace
-                </h1>
-                <p className="text-sm text-muted-foreground">
-                  Connect data sources to Settle's normalised intelligence
-                  pipeline — connect, pull, normalise, verify.
-                </p>
-              </div>
+      <div className="max-w-5xl mx-auto px-4 py-8 space-y-8">
+        {/* Header */}
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-border/60 pb-6">
+          <div>
+            <h1 className="font-display text-2xl font-semibold tracking-tight">Integration Marketplace</h1>
+            <p className="text-sm text-muted-foreground mt-1">
+              Connect external platforms and tools to Settle's messaging pipelines.
+            </p>
+          </div>
 
-              {/* Grouped grids */}
-              {(["easy", "standard", "advanced"] as ConnectorCategory[]).map(
-                (cat) =>
-                  grouped[cat].length > 0 && (
-                    <div key={cat} className="mb-7">
-                      <div className="flex items-center gap-2 mb-3">
-                        <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
-                          {CATEGORY_LABELS[cat]}
-                        </span>
-                        <div className="flex-1 h-px bg-border/50" />
-                        <span className="text-[10px] text-muted-foreground">
-                          {grouped[cat].length} connector
-                          {grouped[cat].length > 1 ? "s" : ""}
-                        </span>
+          {/* Environment Selector */}
+          <div className="flex items-center gap-2 self-start bg-input p-1 rounded-lg border border-border/40">
+            <button
+              onClick={() => handleEnvChange("TEST")}
+              className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
+                env === "TEST" ? "bg-primary text-primary-foreground shadow" : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              TEST Environment
+            </button>
+            <button
+              onClick={() => handleEnvChange("PRODUCTION")}
+              className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
+                env === "PRODUCTION" ? "bg-primary text-primary-foreground shadow" : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              PRODUCTION
+            </button>
+          </div>
+        </div>
+
+        {/* Content Tabs */}
+        {activeTab === "marketplace" ? (
+          <div className="grid lg:grid-cols-3 gap-6">
+            {/* Left Col: Connectors List */}
+            <div className="lg:col-span-2 space-y-4">
+              <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Available Connectors</h2>
+              <div className="grid sm:grid-cols-1 gap-4">
+                {CONNECTORS_LIST.map((conn) => {
+                  const status = getStatus(conn.id);
+                  return (
+                    <div
+                      key={conn.id}
+                      className="group p-5 rounded-2xl border border-border/60 bg-card hover:border-primary/40 hover:shadow-soft transition-all glass flex flex-col md:flex-row md:items-center justify-between gap-4"
+                    >
+                      <div className="flex items-start gap-4">
+                        <div className={`h-11 w-11 rounded-xl grid place-items-center shrink-0 ${conn.iconBg}`}>
+                          <conn.icon size={22} className={conn.iconColor} />
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2.5">
+                            <h3 className="font-semibold text-sm text-foreground">{conn.name}</h3>
+                            <StatusBadge status={status} />
+                          </div>
+                          <p className="text-xs text-muted-foreground mt-1 leading-relaxed">{conn.description}</p>
+                        </div>
                       </div>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        {grouped[cat].map((c) => (
-                          <ConnectorCard
-                            key={c.id}
-                            connector={c}
-                            onClick={() => setActive(c)}
-                          />
-                        ))}
+
+                      <div className="flex items-center gap-2 self-end md:self-center">
+                        {status === "Not Connected" ? (
+                          <button
+                            onClick={() => startConnect(conn)}
+                            className="text-xs px-3.5 py-2 rounded-lg bg-primary text-primary-foreground hover:opacity-90 font-medium transition"
+                          >
+                            Connect
+                          </button>
+                        ) : (
+                          <>
+                            <button
+                              onClick={() => {
+                                setSelectedConnector(conn);
+                                setActiveTab("details");
+                              }}
+                              className="text-xs px-3.5 py-2 rounded-lg bg-foreground/5 text-foreground hover:bg-foreground/10 font-medium transition"
+                            >
+                              View Details
+                            </button>
+                            <button
+                              onClick={() => startConnect(conn)}
+                              className="text-xs px-3.5 py-2 rounded-lg border border-primary/20 text-primary hover:bg-primary/5 font-medium transition"
+                            >
+                              Reconnect
+                            </button>
+                          </>
+                        )}
                       </div>
                     </div>
-                  )
-              )}
-            </motion.div>
-          )}
-        </AnimatePresence>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Right Col: Configuration / Environment Settings */}
+            <div className="space-y-4">
+              <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                {env} API Settings
+              </h2>
+              <div className="p-5 rounded-2xl border border-border/60 bg-card glass space-y-4">
+                <div>
+                  <label className="text-[11px] font-semibold text-muted-foreground block mb-1">META_CLIENT_ID</label>
+                  <input
+                    type="text"
+                    placeholder="Enter Meta App ID..."
+                    value={metaClientId}
+                    onChange={(e) => saveConfig("settle_meta_client_id", e.target.value)}
+                    className="w-full rounded-lg bg-input border border-border/60 px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-primary"
+                  />
+                </div>
+                <div>
+                  <label className="text-[11px] font-semibold text-muted-foreground block mb-1">META_REDIRECT_URL</label>
+                  <input
+                    type="text"
+                    placeholder="https://..."
+                    value={metaRedirectUrl}
+                    onChange={(e) => saveConfig("settle_meta_redirect_url", e.target.value)}
+                    className="w-full rounded-lg bg-input border border-border/60 px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-primary"
+                  />
+                </div>
+                <div className="border-t border-border/60 pt-3">
+                  <label className="text-[11px] font-semibold text-muted-foreground block mb-1">GOOGLE_CLIENT_ID</label>
+                  <input
+                    type="text"
+                    placeholder="Enter Google Client ID..."
+                    value={googleClientId}
+                    onChange={(e) => saveConfig("settle_google_client_id", e.target.value)}
+                    className="w-full rounded-lg bg-input border border-border/60 px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-primary"
+                  />
+                </div>
+                <div>
+                  <label className="text-[11px] font-semibold text-muted-foreground block mb-1">GOOGLE_REDIRECT_URL</label>
+                  <input
+                    type="text"
+                    placeholder="https://..."
+                    value={googleRedirectUrl}
+                    onChange={(e) => saveConfig("settle_google_redirect_url", e.target.value)}
+                    className="w-full rounded-lg bg-input border border-border/60 px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-primary"
+                  />
+                </div>
+                <div className="border-t border-border/60 pt-3">
+                  <label className="text-[11px] font-semibold text-muted-foreground block mb-1">WEBHOOK_URL</label>
+                  <input
+                    type="text"
+                    placeholder="https://api.settle.app/..."
+                    value={webhookUrl}
+                    onChange={(e) => saveConfig("settle_webhook_url", e.target.value)}
+                    className="w-full rounded-lg bg-input border border-border/60 px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-primary"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : (
+          /* CONNECTOR DETAILS SCREEN */
+          selectedConnector && (
+            <div className="space-y-6">
+              <button
+                onClick={() => {
+                  setActiveTab("marketplace");
+                  setSelectedConnector(null);
+                }}
+                className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition"
+              >
+                <ArrowLeft size={14} /> Back to Marketplace
+              </button>
+
+              <div className="grid md:grid-cols-[1fr_300px] gap-6">
+                {/* Details info */}
+                <div className="space-y-6">
+                  <div className="flex items-center gap-4">
+                    <div className={`h-12 w-12 rounded-xl grid place-items-center ${selectedConnector.iconBg}`}>
+                      <selectedConnector.icon size={24} className={selectedConnector.iconColor} />
+                    </div>
+                    <div>
+                      <h2 className="text-lg font-semibold">{selectedConnector.name} Integration</h2>
+                      <p className="text-xs text-muted-foreground">{selectedConnector.description}</p>
+                    </div>
+                  </div>
+
+                  <div className="grid sm:grid-cols-2 gap-4">
+                    <div className="p-4 rounded-xl border border-border/60 bg-card glass">
+                      <span className="text-[10px] uppercase font-semibold text-muted-foreground">Connection Status</span>
+                      <div className="mt-1">
+                        <StatusBadge status={getStatus(selectedConnector.id)} />
+                      </div>
+                    </div>
+                    <div className="p-4 rounded-xl border border-border/60 bg-card glass">
+                      <span className="text-[10px] uppercase font-semibold text-muted-foreground">Connected Account</span>
+                      <p className="text-sm font-medium mt-1">{getDetails(selectedConnector.id)?.connected_account || "N/A"}</p>
+                    </div>
+                    <div className="p-4 rounded-xl border border-border/60 bg-card glass">
+                      <span className="text-[10px] uppercase font-semibold text-muted-foreground">Connected Date</span>
+                      <p className="text-sm font-medium mt-1">{getDetails(selectedConnector.id)?.connected_date || "N/A"}</p>
+                    </div>
+                    <div className="p-4 rounded-xl border border-border/60 bg-card glass">
+                      <span className="text-[10px] uppercase font-semibold text-muted-foreground">Last Sync</span>
+                      <p className="text-sm font-medium mt-1">{getDetails(selectedConnector.id)?.last_sync || "N/A"}</p>
+                    </div>
+                    <div className="p-4 rounded-xl border border-border/60 bg-card glass">
+                      <span className="text-[10px] uppercase font-semibold text-muted-foreground">Webhook Status</span>
+                      <p className="text-sm font-medium mt-1 text-emerald-500">{getDetails(selectedConnector.id)?.webhook_status || "Inactive"}</p>
+                    </div>
+                    <div className="p-4 rounded-xl border border-border/60 bg-card glass">
+                      <span className="text-[10px] uppercase font-semibold text-muted-foreground">Token Status</span>
+                      <p className="text-sm font-medium mt-1 text-emerald-500">{getDetails(selectedConnector.id)?.token_status || "Inactive"}</p>
+                    </div>
+                    <div className="p-4 rounded-xl border border-border/60 bg-card glass">
+                      <span className="text-[10px] uppercase font-semibold text-muted-foreground">Environment</span>
+                      <p className="text-sm font-medium mt-1 uppercase">{getDetails(selectedConnector.id)?.environment || env}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Actions sidebar */}
+                <div className="space-y-4 bg-card p-5 rounded-2xl border border-border/60 glass">
+                  <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Actions</h3>
+                  <button
+                    onClick={() => handleReconnect(selectedConnector)}
+                    className="w-full text-xs py-2 px-3 rounded-lg bg-primary text-primary-foreground font-medium hover:opacity-90 transition"
+                  >
+                    Reconnect
+                  </button>
+                  <button
+                    onClick={() => handleRefresh(selectedConnector.id)}
+                    className="w-full text-xs py-2 px-3 rounded-lg bg-foreground/5 text-foreground hover:bg-foreground/10 font-medium transition"
+                  >
+                    Refresh Status
+                  </button>
+                  <button
+                    onClick={() => handleDisconnect(selectedConnector.id)}
+                    className="w-full text-xs py-2 px-3 rounded-lg bg-red-500/10 text-red-500 hover:bg-red-500/20 font-medium transition"
+                  >
+                    Disconnect
+                  </button>
+                </div>
+              </div>
+            </div>
+          )
+        )}
       </div>
+
+      {/* WIZARD DIALOG MODAL */}
+      <Dialog open={wizardOpen} onOpenChange={setWizardOpen}>
+        <DialogContent className="sm:max-w-lg glass-strong">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <PlugZap size={18} className="text-primary" />
+              Configure {selectedConnector?.name}
+            </DialogTitle>
+          </DialogHeader>
+
+          {/* WHATSAPP WIZARD */}
+          {selectedConnector?.id === "whatsapp" && (
+            <div className="space-y-6 py-2">
+              <div className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+                Step {wizardStep} of 12
+              </div>
+
+              {wizardStep === 1 && (
+                <div className="space-y-4">
+                  <h3 className="font-semibold text-sm text-foreground">Connect WhatsApp Business</h3>
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    Connect your WhatsApp Business Account to send and receive messages.
+                  </p>
+                  <button
+                    onClick={() => setWizardStep(2)}
+                    className="w-full py-2 bg-primary text-primary-foreground rounded-lg text-xs font-medium"
+                  >
+                    Continue
+                  </button>
+                </div>
+              )}
+
+              {wizardStep === 2 && (
+                <div className="space-y-4">
+                  <h3 className="font-semibold text-sm text-foreground">Meta Authentication</h3>
+                  <p className="text-xs text-muted-foreground">
+                    You will be redirected to Meta Business.
+                  </p>
+                  <div className="bg-input/60 p-3 rounded-lg border border-border/40 text-[10px] font-mono break-all text-muted-foreground">
+                    Redirect URL: {metaRedirectUrl || "Not Configured (Defaults to Meta SDK login)"}
+                  </div>
+                  <button
+                    onClick={() => {
+                      toast.info("Mock redirecting to Meta Business Manager...");
+                      setTimeout(() => setWizardStep(3), 1000);
+                    }}
+                    className="w-full py-2 bg-blue-600 text-white rounded-lg text-xs font-medium hover:bg-blue-700 transition"
+                  >
+                    Continue to Meta
+                  </button>
+                </div>
+              )}
+
+              {wizardStep === 3 && (
+                <div className="space-y-4">
+                  <h3 className="font-semibold text-sm text-foreground">Business Selection</h3>
+                  <p className="text-xs text-muted-foreground">Select an existing business or create a new one.</p>
+                  <div className="space-y-3">
+                    <label className="block">
+                      <span className="text-[10px] font-semibold text-muted-foreground block mb-1">Business Name / ID</span>
+                      <input
+                        type="text"
+                        placeholder="Enter business_id (e.g. 9817293812)"
+                        value={wizardData.business_id || ""}
+                        onChange={(e) => setWizardData({ ...wizardData, business_id: e.target.value })}
+                        className="w-full rounded-lg bg-input border border-border/60 px-3 py-2 text-xs focus:outline-none"
+                      />
+                    </label>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        onClick={() => setWizardData({ ...wizardData, business_id: "biz_existing_1928" })}
+                        className="py-2 border border-border rounded-lg text-xs hover:bg-foreground/5"
+                      >
+                        Select Existing Business
+                      </button>
+                      <button
+                        onClick={() => setWizardData({ ...wizardData, business_id: "biz_new_" + Date.now() })}
+                        className="py-2 border border-border rounded-lg text-xs hover:bg-foreground/5"
+                      >
+                        Create New Business
+                      </button>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setWizardStep(4)}
+                    disabled={!wizardData.business_id}
+                    className="w-full py-2 bg-primary text-primary-foreground rounded-lg text-xs font-medium disabled:opacity-50"
+                  >
+                    Continue
+                  </button>
+                </div>
+              )}
+
+              {wizardStep === 4 && (
+                <div className="space-y-4">
+                  <h3 className="font-semibold text-sm text-foreground">WhatsApp Business Account (WABA)</h3>
+                  <p className="text-xs text-muted-foreground">Configure the WABA to link with your workspace.</p>
+                  <div className="space-y-3">
+                    <label className="block">
+                      <span className="text-[10px] font-semibold text-muted-foreground block mb-1">WABA ID</span>
+                      <input
+                        type="text"
+                        placeholder="Enter waba_id..."
+                        value={wizardData.waba_id || ""}
+                        onChange={(e) => setWizardData({ ...wizardData, waba_id: e.target.value })}
+                        className="w-full rounded-lg bg-input border border-border/60 px-3 py-2 text-xs focus:outline-none"
+                      />
+                    </label>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        onClick={() => setWizardData({ ...wizardData, waba_id: "waba_existing_0918" })}
+                        className="py-2 border border-border rounded-lg text-xs hover:bg-foreground/5"
+                      >
+                        Select Existing WABA
+                      </button>
+                      <button
+                        onClick={() => setWizardData({ ...wizardData, waba_id: "waba_new_" + Date.now() })}
+                        className="py-2 border border-border rounded-lg text-xs hover:bg-foreground/5"
+                      >
+                        Create New WABA
+                      </button>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setWizardStep(5)}
+                    disabled={!wizardData.waba_id}
+                    className="w-full py-2 bg-primary text-primary-foreground rounded-lg text-xs font-medium disabled:opacity-50"
+                  >
+                    Continue
+                  </button>
+                </div>
+              )}
+
+              {wizardStep === 5 && (
+                <div className="space-y-4">
+                  <h3 className="font-semibold text-sm text-foreground">Phone Number Verification</h3>
+                  <div className="space-y-3 text-xs">
+                    <div>
+                      <label className="block mb-1 font-semibold text-muted-foreground">Phone Number</label>
+                      <input
+                        type="text"
+                        placeholder="+1 555-0199"
+                        value={wizardData.phone || ""}
+                        onChange={(e) => setWizardData({ ...wizardData, phone: e.target.value })}
+                        className="w-full rounded-lg bg-input border border-border/60 px-3 py-2 text-xs focus:outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block mb-1 font-semibold text-muted-foreground">Verification Method</label>
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setWizardData({ ...wizardData, method: "SMS" })}
+                          className={`flex-1 py-1.5 border rounded-lg ${wizardData.method === "SMS" ? "bg-primary/10 border-primary" : "border-border"}`}
+                        >
+                          SMS
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setWizardData({ ...wizardData, method: "Call" })}
+                          className={`flex-1 py-1.5 border rounded-lg ${wizardData.method === "Call" ? "bg-primary/10 border-primary" : "border-border"}`}
+                        >
+                          Call
+                        </button>
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block mb-1 font-semibold text-muted-foreground">OTP</label>
+                      <input
+                        type="text"
+                        placeholder="6-digit code"
+                        value={wizardData.otp || ""}
+                        onChange={(e) => setWizardData({ ...wizardData, otp: e.target.value })}
+                        className="w-full rounded-lg bg-input border border-border/60 px-3 py-2 text-xs focus:outline-none"
+                      />
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => {
+                      // Mocking verification check. If phone ends in '0', we'll simulate verified === false
+                      const isVerified = !(wizardData.phone && wizardData.phone.endsWith("0"));
+                      setWizardData({ ...wizardData, verified: isVerified, phone_number_id: "phone_id_" + Date.now() });
+                      setWizardStep(6);
+                    }}
+                    className="w-full py-2 bg-primary text-primary-foreground rounded-lg text-xs font-medium"
+                  >
+                    Verify & Continue
+                  </button>
+                </div>
+              )}
+
+              {wizardStep === 6 && (
+                <div className="space-y-4">
+                  {wizardData.verified === false ? (
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-2 text-red-500 bg-red-500/10 p-3 rounded-lg border border-red-500/20">
+                        <AlertCircle size={18} />
+                        <span className="text-xs font-semibold">Business Verification Required</span>
+                      </div>
+                      <p className="text-xs text-muted-foreground leading-relaxed">
+                        Meta requires additional verification for this business account before messaging can be activated.
+                      </p>
+                      <button
+                        onClick={() => {
+                          toast.info("Opening Meta Business Verification page...");
+                          setWizardData({ ...wizardData, verified: true }); // Bypass after action
+                        }}
+                        className="w-full py-2 bg-primary text-primary-foreground rounded-lg text-xs font-medium flex items-center justify-center gap-1.5"
+                      >
+                        Open Meta Business Verification <ExternalLink size={13} />
+                      </button>
+                      <button
+                        onClick={() => setWizardStep(7)}
+                        className="w-full py-2 border border-border rounded-lg text-xs font-medium text-muted-foreground"
+                      >
+                        Skip Verification / Proceed
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="space-y-4 text-center py-4">
+                      <CheckCircle size={36} className="text-emerald-500 mx-auto" />
+                      <p className="text-xs font-semibold">Business Account Automatically Verified</p>
+                      <button
+                        onClick={() => setWizardStep(7)}
+                        className="w-full py-2 bg-primary text-primary-foreground rounded-lg text-xs font-medium"
+                      >
+                        Continue
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {wizardStep === 7 && (
+                <div className="space-y-4">
+                  <h3 className="font-semibold text-sm text-foreground">Permissions Requested</h3>
+                  <p className="text-xs text-muted-foreground">Settle requests the following permissions to function:</p>
+                  <div className="space-y-2">
+                    {["Messaging", "Business Management", "Account Access", "Webhook Access"].map((perm) => (
+                      <div key={perm} className="flex items-center gap-2 p-2 rounded bg-input text-xs border border-border/40">
+                        <CheckCircle size={14} className="text-primary shrink-0" />
+                        <span>{perm}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <button
+                    onClick={() => {
+                      setWizardStep(8);
+                      setTimeout(() => {
+                        setWizardStep(9);
+                        setTimeout(() => {
+                          setWizardStep(10);
+                          setTimeout(() => {
+                            setWizardStep(11);
+                          }, 1000);
+                        }, 1000);
+                      }, 1200);
+                    }}
+                    className="w-full py-2 bg-primary text-primary-foreground rounded-lg text-xs font-medium"
+                  >
+                    Grant Permissions & Register
+                  </button>
+                </div>
+              )}
+
+              {wizardStep === 8 && (
+                <div className="space-y-4 text-center py-6">
+                  <Loader size={28} className="text-primary animate-spin mx-auto" />
+                  <p className="text-xs font-medium text-muted-foreground">Generating Access Token...</p>
+                </div>
+              )}
+
+              {wizardStep === 9 && (
+                <div className="space-y-4 text-center py-6">
+                  <Loader size={28} className="text-primary animate-spin mx-auto" />
+                  <p className="text-xs font-medium text-muted-foreground">Registering Webhooks...</p>
+                </div>
+              )}
+
+              {wizardStep === 10 && (
+                <div className="space-y-4 text-center py-6">
+                  <Loader size={28} className="text-primary animate-spin mx-auto" />
+                  <p className="text-xs font-medium text-muted-foreground">Verifying Callback URL...</p>
+                </div>
+              )}
+
+              {wizardStep === 11 && (
+                <div className="space-y-4">
+                  <h3 className="font-semibold text-sm text-foreground">Health Check</h3>
+                  <div className="space-y-2 text-xs">
+                    <div className="flex items-center gap-2 text-emerald-500">
+                      <CheckCircle size={14} /> <span>✓ Business Connected</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-emerald-500">
+                      <CheckCircle size={14} /> <span>✓ WABA Connected</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-emerald-500">
+                      <CheckCircle size={14} /> <span>✓ Phone Verified</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-emerald-500">
+                      <CheckCircle size={14} /> <span>✓ Token Active</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-emerald-500">
+                      <CheckCircle size={14} /> <span>✓ Webhook Active</span>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setWizardStep(12)}
+                    className="w-full py-2 bg-primary text-primary-foreground rounded-lg text-xs font-medium"
+                  >
+                    Next
+                  </button>
+                </div>
+              )}
+
+              {wizardStep === 12 && (
+                <div className="space-y-4 text-center py-4">
+                  <CheckCircle size={40} className="text-emerald-500 mx-auto" />
+                  <h3 className="font-semibold text-sm text-foreground">WhatsApp Connected Successfully</h3>
+                  <p className="text-xs text-muted-foreground">
+                    Your WhatsApp Business integration is fully configured and ready to route messages.
+                  </p>
+                  <button
+                    onClick={() => {
+                      updateStatus("whatsapp", "Connected", {
+                        connected_account: wizardData.phone || "Meta Account",
+                        connected_date: new Date().toLocaleDateString(),
+                        last_sync: "Just now",
+                        webhook_status: "Active",
+                        token_status: "Active",
+                        environment: env,
+                        business_id: wizardData.business_id,
+                        waba_id: wizardData.waba_id,
+                        phone_number_id: wizardData.phone_number_id,
+                      });
+                      setWizardOpen(false);
+                      toast.success("WhatsApp Integrated!");
+                    }}
+                    className="w-full py-2 bg-primary text-primary-foreground rounded-lg text-xs font-medium"
+                  >
+                    Finish Setup
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* INSTAGRAM WIZARD */}
+          {selectedConnector?.id === "instagram" && (
+            <div className="space-y-6 py-2">
+              <div className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+                Step {wizardStep} of 9
+              </div>
+
+              {wizardStep === 1 && (
+                <div className="space-y-4">
+                  <h3 className="font-semibold text-sm text-foreground">Connect Instagram Business</h3>
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    Link your Instagram profile to Settle to automatically sync direct messages and comments.
+                  </p>
+                  <button
+                    onClick={() => setWizardStep(2)}
+                    className="w-full py-2 bg-primary text-primary-foreground rounded-lg text-xs font-medium"
+                  >
+                    Continue
+                  </button>
+                </div>
+              )}
+
+              {wizardStep === 2 && (
+                <div className="space-y-4">
+                  <h3 className="font-semibold text-sm text-foreground">Account Type Verification</h3>
+                  <p className="text-xs text-muted-foreground">Select your current Instagram Account Type:</p>
+                  <div className="space-y-2 text-xs">
+                    <button
+                      onClick={() => setWizardData({ ...wizardData, account_type: "Business" })}
+                      className={`w-full py-2 px-3 text-left border rounded-lg ${wizardData.account_type === "Business" ? "bg-primary/10 border-primary" : "border-border"}`}
+                    >
+                      Business Account (Supported)
+                    </button>
+                    <button
+                      onClick={() => setWizardData({ ...wizardData, account_type: "Creator" })}
+                      className={`w-full py-2 px-3 text-left border rounded-lg ${wizardData.account_type === "Creator" ? "bg-primary/10 border-primary" : "border-border"}`}
+                    >
+                      Creator Account (Supported)
+                    </button>
+                    <button
+                      onClick={() => {
+                        toast.error("Personal Accounts are not supported by Meta API.");
+                        setWizardData({ ...wizardData, account_type: "Personal" });
+                      }}
+                      className="w-full py-2 px-3 text-left border border-red-500/20 bg-red-500/5 text-red-500 rounded-lg"
+                    >
+                      Personal Account (Rejected)
+                    </button>
+                  </div>
+                  <button
+                    onClick={() => setWizardStep(3)}
+                    disabled={!wizardData.account_type || wizardData.account_type === "Personal"}
+                    className="w-full py-2 bg-primary text-primary-foreground rounded-lg text-xs font-medium disabled:opacity-50"
+                  >
+                    Continue
+                  </button>
+                </div>
+              )}
+
+              {wizardStep === 3 && (
+                <div className="space-y-4">
+                  <h3 className="font-semibold text-sm text-foreground">Facebook Page Linkage</h3>
+                  <p className="text-xs text-muted-foreground">Instagram API requires the account to be linked to a Facebook Page.</p>
+                  <div>
+                    <label className="block mb-1 text-xs font-semibold text-muted-foreground">Facebook Page ID</label>
+                    <input
+                      type="text"
+                      placeholder="Enter Page ID (e.g. 1029381203)"
+                      value={wizardData.page_id || ""}
+                      onChange={(e) => setWizardData({ ...wizardData, page_id: e.target.value })}
+                      className="w-full rounded-lg bg-input border border-border/60 px-3 py-2 text-xs focus:outline-none"
+                    />
+                  </div>
+                  <button
+                    onClick={() => setWizardStep(4)}
+                    disabled={!wizardData.page_id}
+                    className="w-full py-2 bg-primary text-primary-foreground rounded-lg text-xs font-medium disabled:opacity-50"
+                  >
+                    Continue
+                  </button>
+                </div>
+              )}
+
+              {wizardStep === 4 && (
+                <div className="space-y-4">
+                  <h3 className="font-semibold text-sm text-foreground">Required Permissions</h3>
+                  <div className="space-y-2">
+                    {["Messages", "Comments", "Mentions", "Profile Access"].map((perm) => (
+                      <div key={perm} className="flex items-center gap-2 p-2 rounded bg-input text-xs border border-border/40">
+                        <CheckCircle size={14} className="text-primary shrink-0" />
+                        <span>{perm}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <button
+                    onClick={() => setWizardStep(5)}
+                    className="w-full py-2 bg-primary text-primary-foreground rounded-lg text-xs font-medium"
+                  >
+                    Grant Permissions
+                  </button>
+                </div>
+              )}
+
+              {wizardStep === 5 && (
+                <div className="space-y-4">
+                  <h3 className="font-semibold text-sm text-foreground">Webhooks Registration</h3>
+                  <p className="text-xs text-muted-foreground">Settle will listen to the following events:</p>
+                  <div className="space-y-2">
+                    {["messages", "comments", "mentions", "story_mentions"].map((wh) => (
+                      <div key={wh} className="flex items-center justify-between p-2 rounded bg-input text-xs border border-border/40">
+                        <span className="font-mono">{wh}</span>
+                        <span className="text-[10px] text-primary bg-primary/10 px-1.5 py-0.5 rounded font-semibold">Registered</span>
+                      </div>
+                    ))}
+                  </div>
+                  <button
+                    onClick={() => {
+                      setWizardStep(6);
+                      setTimeout(() => {
+                        setWizardStep(7);
+                        setTimeout(() => {
+                          setWizardStep(8);
+                        }, 1000);
+                      }, 1200);
+                    }}
+                    className="w-full py-2 bg-primary text-primary-foreground rounded-lg text-xs font-medium"
+                  >
+                    Register Webhooks
+                  </button>
+                </div>
+              )}
+
+              {wizardStep === 6 && (
+                <div className="space-y-4 text-center py-6">
+                  <Loader size={28} className="text-primary animate-spin mx-auto" />
+                  <p className="text-xs font-medium text-muted-foreground">Generating Access Token...</p>
+                </div>
+              )}
+
+              {wizardStep === 7 && (
+                <div className="space-y-4 text-center py-6">
+                  <Loader size={28} className="text-primary animate-spin mx-auto" />
+                  <p className="text-xs font-medium text-muted-foreground">Verifying Callback URL...</p>
+                </div>
+              )}
+
+              {wizardStep === 8 && (
+                <div className="space-y-4">
+                  <h3 className="font-semibold text-sm text-foreground">Health Check</h3>
+                  <div className="space-y-2 text-xs">
+                    <div className="flex items-center gap-2 text-emerald-500">
+                      <CheckCircle size={14} /> <span>✓ Connected Page Active</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-emerald-500">
+                      <CheckCircle size={14} /> <span>✓ Webhook Active</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-emerald-500">
+                      <CheckCircle size={14} /> <span>✓ Token verified</span>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setWizardStep(9)}
+                    className="w-full py-2 bg-primary text-primary-foreground rounded-lg text-xs font-medium"
+                  >
+                    Next
+                  </button>
+                </div>
+              )}
+
+              {wizardStep === 9 && (
+                <div className="space-y-4 text-center py-4">
+                  <CheckCircle size={40} className="text-emerald-500 mx-auto" />
+                  <h3 className="font-semibold text-sm text-foreground">Instagram Connected Successfully</h3>
+                  <p className="text-xs text-muted-foreground">
+                    Instagram API has been configured successfully.
+                  </p>
+                  <button
+                    onClick={() => {
+                      updateStatus("instagram", "Connected", {
+                        connected_account: "Meta Instagram Business",
+                        connected_date: new Date().toLocaleDateString(),
+                        last_sync: "Just now",
+                        webhook_status: "Active",
+                        token_status: "Active",
+                        environment: env,
+                        page_id: wizardData.page_id,
+                      });
+                      setWizardOpen(false);
+                      toast.success("Instagram Integrated!");
+                    }}
+                    className="w-full py-2 bg-primary text-primary-foreground rounded-lg text-xs font-medium"
+                  >
+                    Finish Setup
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* GMAIL WIZARD */}
+          {selectedConnector?.id === "gmail" && (
+            <div className="space-y-6 py-2">
+              <div className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+                Step {wizardStep} of 9
+              </div>
+
+              {wizardStep === 1 && (
+                <div className="space-y-4">
+                  <h3 className="font-semibold text-sm text-foreground">Connect Gmail</h3>
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    Grant Settle secure access to monitor messages or automate emails using Google OAuth.
+                  </p>
+                  <button
+                    onClick={() => setWizardStep(2)}
+                    className="w-full py-2 bg-primary text-primary-foreground rounded-lg text-xs font-medium"
+                  >
+                    Continue
+                  </button>
+                </div>
+              )}
+
+              {wizardStep === 2 && (
+                <div className="space-y-4">
+                  <h3 className="font-semibold text-sm text-foreground">Google OAuth</h3>
+                  <p className="text-xs text-muted-foreground">You will proceed to secure Google authorization.</p>
+                  <div className="bg-input/60 p-3 rounded-lg border border-border/40 text-[10px] font-mono break-all text-muted-foreground">
+                    Redirect URL: {googleRedirectUrl || "Not Configured"}
+                  </div>
+                  <button
+                    onClick={() => setWizardStep(3)}
+                    className="w-full py-2.5 bg-foreground text-background hover:bg-foreground/90 transition rounded-lg text-xs font-semibold flex items-center justify-center gap-2"
+                  >
+                    Continue with Google
+                  </button>
+                </div>
+              )}
+
+              {wizardStep === 3 && (
+                <div className="space-y-4">
+                  <h3 className="font-semibold text-sm text-foreground">Select Google Account</h3>
+                  <div className="space-y-2">
+                    <button
+                      onClick={() => setWizardData({ ...wizardData, email: "support@google.com" })}
+                      className={`w-full py-2 px-3 text-left border rounded-lg text-xs font-medium ${wizardData.email === "support@google.com" ? "bg-primary/10 border-primary" : "border-border"}`}
+                    >
+                      support@google.com
+                    </button>
+                    <div className="border-t border-border/60 my-2 pt-2">
+                      <label className="block">
+                        <span className="text-[10px] font-semibold text-muted-foreground block mb-1">Use another account</span>
+                        <input
+                          type="email"
+                          placeholder="your-email@gmail.com"
+                          value={wizardData.email || ""}
+                          onChange={(e) => setWizardData({ ...wizardData, email: e.target.value })}
+                          className="w-full rounded-lg bg-input border border-border/60 px-3 py-2 text-xs focus:outline-none"
+                        />
+                      </label>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setWizardStep(4)}
+                    disabled={!wizardData.email}
+                    className="w-full py-2 bg-primary text-primary-foreground rounded-lg text-xs font-medium disabled:opacity-50"
+                  >
+                    Confirm & Proceed
+                  </button>
+                </div>
+              )}
+
+              {wizardStep === 4 && (
+                <div className="space-y-4">
+                  <h3 className="font-semibold text-sm text-foreground">Permissions Requested</h3>
+                  <div className="space-y-2">
+                    {["Gmail Read", "Gmail Send", "Gmail Metadata", "Profile Access"].map((perm) => (
+                      <div key={perm} className="flex items-center gap-2 p-2 rounded bg-input text-xs border border-border/40">
+                        <CheckCircle size={14} className="text-primary shrink-0" />
+                        <span>{perm}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <button
+                    onClick={() => {
+                      setWizardStep(5);
+                      setTimeout(() => {
+                        setWizardStep(6);
+                        setTimeout(() => {
+                          setWizardStep(7);
+                          setTimeout(() => {
+                            setWizardStep(8);
+                          }, 1000);
+                        }, 1000);
+                      }, 1200);
+                    }}
+                    className="w-full py-2 bg-primary text-primary-foreground rounded-lg text-xs font-medium"
+                  >
+                    Grant Permissions
+                  </button>
+                </div>
+              )}
+
+              {wizardStep === 5 && (
+                <div className="space-y-4 text-center py-6">
+                  <Loader size={28} className="text-primary animate-spin mx-auto" />
+                  <p className="text-xs font-medium text-muted-foreground">Token Exchange in Progress...</p>
+                </div>
+              )}
+
+              {wizardStep === 6 && (
+                <div className="space-y-4 text-center py-6">
+                  <Loader size={28} className="text-primary animate-spin mx-auto" />
+                  <p className="text-xs font-medium text-muted-foreground">Validating Mailbox Access...</p>
+                </div>
+              )}
+
+              {wizardStep === 7 && (
+                <div className="space-y-4 text-center py-6">
+                  <Loader size={28} className="text-primary animate-spin mx-auto" />
+                  <p className="text-xs font-medium text-muted-foreground">Registering Pub/Sub Watch Command...</p>
+                </div>
+              )}
+
+              {wizardStep === 8 && (
+                <div className="space-y-4">
+                  <h3 className="font-semibold text-sm text-foreground">Health Check</h3>
+                  <div className="space-y-2 text-xs">
+                    <div className="flex items-center gap-2 text-emerald-500">
+                      <CheckCircle size={14} /> <span>✓ Account Connected</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-emerald-500">
+                      <CheckCircle size={14} /> <span>✓ Refresh Token Stored</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-emerald-500">
+                      <CheckCircle size={14} /> <span>✓ Watch Registered</span>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setWizardStep(9)}
+                    className="w-full py-2 bg-primary text-primary-foreground rounded-lg text-xs font-medium"
+                  >
+                    Next
+                  </button>
+                </div>
+              )}
+
+              {wizardStep === 9 && (
+                <div className="space-y-4 text-center py-4">
+                  <CheckCircle size={40} className="text-emerald-500 mx-auto" />
+                  <h3 className="font-semibold text-sm text-foreground">Gmail Connected Successfully</h3>
+                  <p className="text-xs text-muted-foreground">
+                    Google OAuth validation has completed.
+                  </p>
+                  <button
+                    onClick={() => {
+                      updateStatus("gmail", "Connected", {
+                        connected_account: wizardData.email || "Google Account",
+                        connected_date: new Date().toLocaleDateString(),
+                        last_sync: "Just now",
+                        webhook_status: "Active",
+                        token_status: "Active",
+                        environment: env,
+                      });
+                      setWizardOpen(false);
+                      toast.success("Gmail Integrated!");
+                    }}
+                    className="w-full py-2 bg-primary text-primary-foreground rounded-lg text-xs font-medium"
+                  >
+                    Finish Setup
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </SettleShell>
   );
 }
