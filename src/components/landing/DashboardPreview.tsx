@@ -31,11 +31,24 @@ export function DashboardPreview() {
   const [modalOpen, setModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("Overview");
   const [userName, setUserName] = useState("Aarav");
+  const [stats, setStats] = useState<any>(null);
 
   useEffect(() => {
     const storedName = localStorage.getItem("settle_firstName");
     if (storedName) {
       setUserName(storedName);
+    }
+
+    const token = localStorage.getItem("settle_token");
+    if (token) {
+      fetch("http://localhost:4000/api/dashboard/stats", {
+        headers: { "Authorization": `Bearer ${token}` }
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (!data.error) setStats(data);
+      })
+      .catch(console.error);
     }
   }, []);
 
@@ -153,7 +166,7 @@ export function DashboardPreview() {
                     </div>
                   </div>
 
-                  {activeTab === "Overview" && <OverviewTabContent />}
+                  {activeTab === "Overview" && <OverviewTabContent stats={stats} />}
                   {activeTab === "Reports" && <ReportsTabContent />}
                   {activeTab === "Unified Inbox" && <UnifiedInboxTabContent />}
                   {activeTab === "Employees" && <EmployeesTabContent />}
@@ -170,14 +183,14 @@ export function DashboardPreview() {
   );
 }
 
-function OverviewTabContent() {
+function OverviewTabContent({ stats }: { stats?: any }) {
   return (
     <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-500">
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <StatCard icon={FileText} label="Reports" value="128" delta="+18%" tint="emerald" />
-        <StatCard icon={Users} label="Active" value="46" delta="+4" tint="violet" />
-        <StatCard icon={Bell} label="Reminders sent" value="312" delta="98%" tint="blue" />
-        <StatCard icon={TrendingUp} label="Completion" value="82%" delta="+6%" tint="pink" />
+        <StatCard icon={FileText} label="Total Leads" value={stats?.totalLeads ?? "128"} delta="+18%" tint="emerald" />
+        <StatCard icon={Users} label="Open Leads" value={stats?.openLeads ?? "46"} delta="+4" tint="violet" />
+        <StatCard icon={Bell} label="Pending Followups" value={stats?.pendingFollowups ?? "312"} delta="98%" tint="blue" />
+        <StatCard icon={TrendingUp} label="Conversion" value={stats?.conversionRate ?? "82%"} delta="+6%" tint="pink" />
       </div>
 
       <div className="grid lg:grid-cols-3 gap-3">

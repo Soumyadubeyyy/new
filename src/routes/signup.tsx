@@ -1,5 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { AuthShell, Field, PrimaryButton } from "@/components/auth/AuthShell";
+import { useState } from "react";
 
 export const Route = createFileRoute("/signup")({
   head: () => ({ meta: [{ title: "Sign Up · Settle" }] }),
@@ -8,6 +9,7 @@ export const Route = createFileRoute("/signup")({
 
 function SignupPage() {
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
 
   return (
     <AuthShell
@@ -24,14 +26,31 @@ function SignupPage() {
     >
       <form
         className="space-y-4"
-        onSubmit={(e) => {
+        onSubmit={async (e) => {
           e.preventDefault();
           const formData = new FormData(e.currentTarget);
-          const firstName = formData.get("firstName") as string;
-          if (firstName) {
-            localStorage.setItem("settle_firstName", firstName);
+          const data = Object.fromEntries(formData.entries());
+          
+          setLoading(true);
+          try {
+            const res = await fetch("http://localhost:4000/api/auth/register", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(data),
+            });
+            const resData = await res.json();
+            if (!res.ok) throw new Error(resData.error);
+            
+            localStorage.setItem("settle_token", resData.token);
+            if (data.firstName) {
+              localStorage.setItem("settle_firstName", data.firstName as string);
+            }
+            navigate({ to: "/onboarding/property" });
+          } catch (error: any) {
+            alert(error.message || "Signup failed");
+          } finally {
+            setLoading(false);
           }
-          navigate({ to: "/onboarding/property" });
         }}
       >
         <div className="grid grid-cols-2 gap-4">
@@ -43,7 +62,7 @@ function SignupPage() {
         <Field name="phone" label="Phone Number" type="tel" placeholder="+1 234 567 8900" required />
         <Field name="password" label="Password" type="password" placeholder="••••••••" required />
 
-        <PrimaryButton>Sign Up</PrimaryButton>
+        <PrimaryButton disabled={loading}>{loading ? "Signing Up..." : "Sign Up"}</PrimaryButton>
       </form>
     </AuthShell>
   );

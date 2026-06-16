@@ -64,15 +64,44 @@ function PropertySetupPage() {
   const [propertyType, setPropertyType] = useState<"hotel" | "fnb" | "both">("both");
   const [hasRestaurant, setHasRestaurant] = useState(true);
   const [starRating, setStarRating] = useState("4");
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const fd = new FormData(e.currentTarget as HTMLFormElement);
-    localStorage.setItem("settle_propertyName", fd.get("propertyName") as string);
-    localStorage.setItem("settle_propertyType", propertyType);
-    localStorage.setItem("settle_starRating", starRating);
-    localStorage.setItem("settle_hasRestaurant", String(hasRestaurant));
-    navigate({ to: "/onboarding/whatsapp" });
+    const token = localStorage.getItem("settle_token");
+
+    setLoading(true);
+    try {
+      const res = await fetch("http://localhost:4000/api/properties", {
+        method: "POST",
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}` 
+        },
+        body: JSON.stringify({
+          name: fd.get("propertyName"),
+          city: fd.get("city"),
+          propertyType,
+          starRating,
+          hasRestaurant
+        }),
+      });
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error);
+      }
+      
+      // Store locally for UI rendering
+      localStorage.setItem("settle_propertyName", fd.get("propertyName") as string);
+      localStorage.setItem("settle_propertyType", propertyType);
+      
+      navigate({ to: "/onboarding/whatsapp" });
+    } catch (err: any) {
+      alert(err.message || "Failed to create property");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -176,7 +205,9 @@ function PropertySetupPage() {
           </button>
         </div>
 
-        <PrimaryButton type="submit">Continue →</PrimaryButton>
+        <PrimaryButton type="submit" disabled={loading}>
+          {loading ? "Saving..." : "Continue →"}
+        </PrimaryButton>
       </form>
     </AuthShell>
   );

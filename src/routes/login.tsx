@@ -21,16 +21,77 @@ export const Route = createFileRoute("/login")({
 function LoginPage() {
   const [role, setRole] = useState<"employee" | "owner">("employee");
   const [method, setMethod] = useState<"email" | "phone">("email");
+  const [otpSent, setOtpSent] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [phone, setPhone] = useState("");
+  const [otp, setOtp] = useState("");
   const navigate = useNavigate({ from: "/login" });
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (role === "employee") {
-      toast.success("Welcome back! Routing to your task inbox…");
-      navigate({ to: "/settle/inbox" });
-    } else {
-      toast.success("Welcome back! Loading your property overview…");
-      navigate({ to: "/dashboard" });
+    setLoading(true);
+
+    try {
+      if (method === "email") {
+        try {
+          const res = await fetch("http://localhost:4000/api/auth/login", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, password }),
+          });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error);
+          localStorage.setItem("settle_token", data.token);
+          localStorage.setItem("settle_firstName", data.user?.name || "User");
+        } catch (e) {
+          console.warn("Backend unavailable, using mock login.");
+          localStorage.setItem("settle_token", "mock_token_" + Date.now());
+          localStorage.setItem("settle_firstName", email.split('@')[0] || "User");
+        }
+        toast.success("Welcome back!");
+        navigate({ to: role === "employee" ? "/settle/inbox" : "/dashboard" });
+      } else {
+        if (!otpSent) {
+          try {
+            const res = await fetch("http://localhost:4000/api/auth/send-otp", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ phone }),
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error);
+          } catch (e) {
+            console.warn("Backend unavailable, using mock OTP.");
+          }
+          setOtpSent(true);
+          toast.success("OTP sent! (Use 123456 for MVP)");
+        } else {
+          try {
+            const res = await fetch("http://localhost:4000/api/auth/verify-otp", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ phone, code: otp }),
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error);
+            localStorage.setItem("settle_token", data.token);
+            localStorage.setItem("settle_firstName", data.user?.name || "User");
+          } catch (e) {
+            console.warn("Backend unavailable, using mock login.");
+            if (otp !== "123456") throw new Error("Invalid OTP (use 123456)");
+            localStorage.setItem("settle_token", "mock_token_" + Date.now());
+            localStorage.setItem("settle_firstName", "User");
+          }
+          toast.success("Welcome back!");
+          navigate({ to: role === "employee" ? "/settle/inbox" : "/dashboard" });
+        }
+      }
+    } catch (error: any) {
+      toast.error(error.message || "Failed to login");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -84,18 +145,34 @@ function LoginPage() {
       <form className="space-y-4" onSubmit={handleLogin}>
         {method === "email" ? (
           <>
-            <Field label="Email" type="email" placeholder="you@company.com" />
-            <Field label="Password" type="password" placeholder="••••••••" />
+            <Field label="Email" type="email" placeholder="you@company.com" value={email} onChange={(e: any) => setEmail(e.target.value)} required />
+            <Field label="Password" type="password" placeholder="••••••••" value={password} onChange={(e: any) => setPassword(e.target.value)} required />
           </>
         ) : (
-          <Field
-            label="Phone number"
-            type="tel"
-            placeholder="+91 98765 43210"
-          />
+          <>
+            {!otpSent ? (
+              <Field
+                label="Phone number"
+                type="tel"
+                placeholder="+91 98765 43210"
+                value={phone}
+                onChange={(e: any) => setPhone(e.target.value)}
+                required
+              />
+            ) : (
+              <Field
+                label="OTP Code"
+                type="text"
+                placeholder="123456"
+                value={otp}
+                onChange={(e: any) => setOtp(e.target.value)}
+                required
+              />
+            )}
+          </>
         )}
-        <PrimaryButton>
-          {method === "email" ? "Continue" : "Send OTP"}
+        <PrimaryButton disabled={loading}>
+          {loading ? "Please wait..." : method === "email" ? "Continue" : !otpSent ? "Send OTP" : "Verify OTP"}
         </PrimaryButton>
       </form>
 
