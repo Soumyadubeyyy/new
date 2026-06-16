@@ -65,14 +65,16 @@ function Toggle({
   return (
     <button
       type="button"
+      role="switch"
+      aria-checked={value}
       onClick={() => onChange(!value)}
-      className={`relative h-5 w-9 rounded-full shrink-0 transition-colors duration-200 ${
-        value ? "bg-primary" : "bg-foreground/15"
+      className={`relative h-5 w-9 rounded-full shrink-0 transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-1 focus-visible:ring-offset-background ${
+        value ? "bg-primary hover:bg-primary/90" : "bg-foreground/15 hover:bg-foreground/20"
       }`}
     >
       <span
-        className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform duration-200 ${
-          value ? "translate-x-4" : "translate-x-0.5"
+        className={`absolute top-[2px] left-[2px] h-4 w-4 rounded-full bg-white shadow-sm transition-transform duration-200 ease-in-out ${
+          value ? "translate-x-4" : "translate-x-0"
         }`}
       />
     </button>
